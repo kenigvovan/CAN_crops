@@ -1,0 +1,218 @@
+﻿{
+  "game:crop-onion": {
+    "minTemp": -1,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-onion",
+    "seedName": "game:seeds-onion",
+    "tier": 1
+  },
+  "game:crop-turnip": {
+    "minTemp": -5,
+    "maxTemp": 27,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-turnip",
+    "seedName": "game:seeds-turnip",
+    "tier": 1
+  },
+  "game:crop-amaranth": {
+    "minTemp": 6,
+    "maxTemp": 42,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-amaranth",
+    "seedName": "game:seeds-amaranth",
+    "tier": 2
+  },
+  "game:crop-sunflower": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-sunflower",
+    "seedName": "game:seeds-sunflower",
+    "tier": 2
+  },
+  "game:crop-cabbage": {
+    "minTemp": -5,
+    "maxTemp": 35,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-cabbage",
+    "seedName": "game:seeds-cabbage",
+    "tier": 2
+  },
+  "game:crop-carrot": {
+    "minTemp": -10,
+    "maxTemp": 32,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-carrot",
+    "seedName": "game:seeds-carrot",
+    "tier": 1
+  },
+  "game:crop-cassava": {
+    "minTemp": 4,
+    "maxTemp": 44,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-cassava",
+    "seedName": "game:seeds-cassava",
+    "tier": 1
+  },
+  "game:crop-flax": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-flax",
+    "seedName": "game:seeds-flax",
+    "tier": 1
+  },
+  "game:crop-parsnip": {
+    "minTemp": -10,
+    "maxTemp": 32,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-parsnip",
+    "seedName": "game:seeds-parsnip",
+    "tier": 1
+  },
+  "game:crop-peanut": {
+    "minTemp": 10,
+    "maxTemp": 42,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-peanut",
+    "seedName": "game:seeds-peanut",
+    "tier": 2
+  },
+  "game:crop-pineapple": {
+    "minTemp": 6,
+    "maxTemp": 48,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-pineapple",
+    "seedName": "game:seeds-pineapple",
+    "tier": 3
+  },
+  "game:crop-rice": {
+    "minTemp": 8,
+    "maxTemp": 46,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-rice",
+    "seedName": "game:seeds-rice",
+    "tier": 1
+  },
+  "game:crop-rye": {
+    "minTemp": -12,
+    "maxTemp": 27,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-rye",
+    "seedName": "game:seeds-rye",
+    "tier": 2
+  },
+  "game:crop-soybean": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-soybean",
+    "seedName": "game:seeds-soybean",
+    "tier": 2
+  },
+  "game:crop-spelt": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "game:crop-spelt",
+    "seedName": "game:seeds-spelt",
+    "tier": 2
+  },
+  "potatoes:crop-yam": {
+    "minTemp": -2,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-yam",
+    "seedName": "potatoes:seeds-yam",
+    "tier": 1
+  },
+  "potatoes:crop-potato": {
+    "minTemp": -2,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-potato",
+    "seedName": "potatoes:seeds-potato",
+    "tier": 2
+  },
+  "potatoes:crop-jalapeno": {
+    "minTemp": 5,
+    "maxTemp": 35,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-jalapeno",
+    "seedName": "potatoes:seeds-jalapeno",
+    "tier": 1
+  },
+  "potatoes:crop-eggplant": {
+    "minTemp": 6,
+    "maxTemp": 45,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-eggplant",
+    "seedName": "potatoes:seeds-eggplant",
+    "tier": 1
+  },
+  "potatoes:crop-cauliflower": {
+    "minTemp": -5,
+    "maxTemp": 35,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-cauliflower",
+    "seedName": "potatoes:seeds-cauliflower",
+    "tier": 1
+  },
+  "potatoes:crop-beet": {
+    "minTemp": -5,
+    "maxTemp": 35,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-beet",
+    "seedName": "potatoes:seeds-beet",
+    "tier": 1
+  },
+  "potatoes:crop-corn": {
+    "minTemp": -5,
+    "maxTemp": 35,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "potatoes:crop-corn",
+    "seedName": "potatoes:seeds-corn",
+    "tier": 1
+  },
+  "hideandfabric:crop-cotton": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "hideandfabric:crop-cotton",
+    "seedName": "hideandfabric:seeds-cotton",
+    "tier": 1
+  },
+  "hideandfabric:crop-jute": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "hideandfabric:crop-jute",
+    "seedName": "hideandfabric:seeds-jute",
+    "tier": 1
+  }
+}

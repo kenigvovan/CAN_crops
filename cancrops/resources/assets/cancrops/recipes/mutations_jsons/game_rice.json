@@ -1,0 +1,13 @@
+[
+  {
+    "enabled": true,
+    "mods": [
+      "game"
+    ],
+    "chance": 0.5,
+    "child": "game:rice",
+    "parent1": "game:flax",
+    "parent2": "game:turnip",
+    "conditions": []
+  }
+]

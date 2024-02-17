@@ -1,0 +1,52 @@
+﻿{
+	"code": "selectionsticksitem",
+	"class": "CANItemSelectionSticks",
+	"shape": {
+		"base": "cancrops:selection_sticks_item"
+	},
+	"maxstacksize": 64,
+	"creativeinventory": {
+		"general": [ "*" ],
+		"decorative": [ "*" ],
+		"cancrops": [ "*" ]
+	},
+	"blockmaterial": "Plant",
+	"replaceable": 900,
+	"lightAbsorption": 99,
+	"textures": {
+		"generic": { "base": "cancrops:block/generic" }
+	},
+	"fpHandTransform": {
+		"translation": {
+			"x": 0.05,
+			"y": -0.2,
+			"z": 0
+		},
+		"rotation": {
+			"x": 166,
+			"y": 70,
+			"z": -9
+		},
+		"scale": 1.28
+	},
+	"guiTransform": {
+		"translation": {
+			"x": 4,
+			"y": 19,
+			"z": 0
+		},
+		"scale": 1.55
+	},
+	"tpHandTransform": {
+		"translation": {
+			"x": -1.9,
+			"y": -1.6,
+			"z": -1.4
+		},
+		"rotation": {
+			"x": -95,
+			"y": 13,
+			"z": 77
+		}
+	}
+}

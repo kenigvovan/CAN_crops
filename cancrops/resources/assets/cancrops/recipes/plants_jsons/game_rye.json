@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "domain": "game",
+  "id": "rye",
+  "growthmultiplier": 1.0,
+  "cloneable": true,
+  "spreadchance": 0.2,
+  "seeddropchance": 1.0,
+  "seeddropbonus": 0.0,
+  "allowSourceStage": 4
+}

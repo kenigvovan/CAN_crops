@@ -1,0 +1,20 @@
+﻿[
+  {
+    "ingredientPattern": "S_S,S_S",
+    "ingredients": {
+      "S": {
+        "type": "item",
+        "code": "game:stick",
+        "quantity": 2
+      }
+    },
+    "name": "canseedsonion",
+    "width": 3,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "cancrops:selectionsticksitem",
+      "quantity": 4
+    }
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "enabled": true,
+    "mods": [
+      "game"
+    ],
+    "chance": 0.5,
+    "child": "game:peanut",
+    "parent1": "game:soybean",
+    "parent2": "game:turnip",
+    "conditions": []
+  }
+]

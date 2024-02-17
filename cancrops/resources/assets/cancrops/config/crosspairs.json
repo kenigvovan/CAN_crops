@@ -1,0 +1,466 @@
+﻿[
+  //onion
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.55
+  },
+  {
+    "Code1": "game:crop-parsnip",
+    "Code2": "game:crop-parsnip",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.45
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.6
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-cabbage",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.2
+  },
+  {
+    "Code1": "game:crop-flax",
+    "Code2": "game:crop-flax",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.2
+  },
+
+
+  //turnip
+  {
+    "Code1": "game:crop-onion",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-turnip",
+    "Chance": 0.55
+  },
+  {
+    "Code1": "game:crop-parsnip",
+    "Code2": "game:crop-parsnip",
+    "CodeResult": "game:crop-turnip",
+    "Chance": 0.55
+  },
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rye",
+    "CodeResult": "game:crop-turnip",
+    "Chance": 0.35
+  },
+
+  //parsnip
+  {
+    "Code1": "game:crop-onion",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-parsnip",
+    "Chance": 0.45
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-parsnip",
+    "Chance": 0.45
+  },
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-parsnip",
+    "Chance": 0.45
+  },
+
+
+
+  //carrot
+  {
+    "Code1": "game:crop-onion",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.15
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.15
+  },
+  {
+    "Code1": "game:crop-parsnip",
+    "Code2": "game:crop-parsnip",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-cabbage",
+    "Code2": "game:crop-rye",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.15
+  },
+  {
+    "Code1": "game:crop-cabbage",
+    "Code2": "game:crop-spelt",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.15
+  },
+
+  //soybean
+  {
+    "Code1": "game:crop-onion",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-soybean",
+    "Chance": 0.05
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-soybean",
+    "Chance": 0.05
+  },
+  {
+    "Code1": "game:crop-parsnip",
+    "Code2": "game:crop-parsnip",
+    "CodeResult": "game:crop-soybean",
+    "Chance": 0.05
+  },
+
+  //rice
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-rice",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-rye",
+    "Code2": "game:crop-spelt",
+    "CodeResult": "game:crop-rice",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-rye",
+    "Code2": "game:crop-flax",
+    "CodeResult": "game:crop-rice",
+    "Chance": 0.05
+  },
+
+  //flax
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-flax",
+    "Chance": 0.65
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-flax",
+    "Chance": 0.5
+  },
+  {
+    "Code1": "game:crop-carrot",
+    "Code2": "game:crop-carrot",
+    "CodeResult": "game:crop-flax",
+    "Chance": 0.32
+  },
+  {
+    "Code1": "game:crop-cabbage",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-flax",
+    "Chance": 0.65
+  },
+
+  //spelt
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-spelt",
+    "Chance": 0.35
+  },
+
+  //rye
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-rye",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rice",
+    "CodeResult": "game:crop-rye",
+    "Chance": 0.45
+  },
+
+  //amaranth
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-amaranth",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rice",
+    "CodeResult": "game:crop-amaranth",
+    "Chance": 0.55
+  },
+  {
+    "Code1": "game:crop-sunflower",
+    "Code2": "game:crop-sunflower",
+    "CodeResult": "game:crop-amaranth",
+    "Chance": 0.25
+  },
+
+  //sunflower
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-sunflower",
+    "Chance": 0.35
+  },
+
+  //cassava
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-cassava",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rice",
+    "CodeResult": "game:crop-cassava",
+    "Chance": 0.45
+  },
+
+  //cabage
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rice",
+    "CodeResult": "game:crop-cabbage",
+    "Chance": 0.75
+  },
+
+  //pineapple
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-cassave",
+    "CodeResult": "game:crop-pineapple",
+    "Chance": 0.15
+  },
+  {
+    "Code1": "game:crop-cassava",
+    "Code2": "game:crop-cassava",
+    "CodeResult": "game:crop-pineapple",
+    "Chance": 0.21
+  },
+
+  //peanut
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-sunflower",
+    "CodeResult": "game:crop-peanut",
+    "Chance": 0.35
+  },
+  {
+    "Code1": "game:crop-cassava",
+    "Code2": "game:crop-cassava",
+    "CodeResult": "game:crop-peanut",
+    "Chance": 0.25
+  },
+
+  //yam
+  {
+    "Code1": "potatoes:crop-turnip",
+    "Code2": "potatoes:crop-onion",
+    "CodeResult": "potatoes:crop-yam",
+    "Chance": 0.15
+  },
+  {
+    "Code1": "potatoes:crop-rice",
+    "Code2": "potatoes:crop-rye",
+    "CodeResult": "potatoes:crop-yam",
+    "Chance": 0.25
+  },
+
+  //potato
+  {
+    "Code1": "potatoes:crop-turnip",
+    "Code2": "potatoes:crop-carrot",
+    "CodeResult": "potatoes:crop-potato",
+    "Chance": 0.25
+  },
+
+  //jalapeno
+  {
+    "Code1": "potatoes:crop-amaranth",
+    "Code2": "potatoes:crop-flax",
+    "CodeResult": "potatoes:crop-jalapeno",
+    "Chance": 0.15
+  },
+
+  //eggplant
+  {
+    "Code1": "potatoes:crop-sunflower",
+    "Code2": "potatoes:crop-parsnip",
+    "CodeResult": "potatoes:crop-eggplant",
+    "Chance": 0.35
+  },
+
+
+  //cauliflower
+  {
+    "Code1": "potatoes:crop-cabbage",
+    "Code2": "potatoes:crop-soybean",
+    "CodeResult": "potatoes:crop-cauliflower",
+    "Chance": 0.5
+  },
+
+  //beet
+  {
+    "Code1": "potatoes:crop-potato",
+    "Code2": "potatoes:crop-flax",
+    "CodeResult": "potatoes:crop-beet",
+    "Chance": 0.15
+  },
+
+
+
+  {
+    "Code1": "potatoes:crop-yam",
+    "Code2": "potatoes:crop-yam",
+    "CodeResult": "potatoes:crop-yam",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "potatoes:crop-potato",
+    "Code2": "potatoes:crop-potato",
+    "CodeResult": "potatoes:crop-potato",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "potatoes:crop-jalapeno",
+    "Code2": "potatoes:crop-jalapeno",
+    "CodeResult": "potatoes:crop-jalapeno",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "potatoes:crop-eggplant",
+    "Code2": "potatoes:crop-eggplant",
+    "CodeResult": "potatoes:crop-eggplant",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "potatoes:crop-cauliflower",
+    "Code2": "potatoes:crop-cauliflower",
+    "CodeResult": "potatoes:crop-cauliflower",
+    "Chance": 0.95
+  },
+
+  {
+    "Code1": "potatoes:crop-beet",
+    "Code2": "potatoes:crop-beet",
+    "CodeResult": "potatoes:crop-beet",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-peanut",
+    "Code2": "game:crop-peanut",
+    "CodeResult": "game:crop-peanut",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-cassava",
+    "Code2": "game:crop-cassava",
+    "CodeResult": "game:crop-cassava",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-pineapple",
+    "Code2": "game:crop-pineapple",
+    "CodeResult": "game:crop-pineapple",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-pumpkin",
+    "Code2": "game:crop-pumpkin",
+    "CodeResult": "game:crop-pumpkin",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-cabbage",
+    "Code2": "game:crop-cabbage",
+    "CodeResult": "game:crop-cabbage",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-soybean",
+    "Code2": "game:crop-soybean",
+    "CodeResult": "game:crop-soybean",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-rye",
+    "Code2": "game:crop-rye",
+    "CodeResult": "game:crop-rye",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-rice",
+    "Code2": "game:crop-rice",
+    "CodeResult": "game:crop-rice",
+    "Chance": 0.95
+  },
+
+  {
+    "Code1": "game:crop-parsnip",
+    "Code2": "game:crop-parsnip",
+    "CodeResult": "game:crop-parsnip",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-spelt",
+    "Code2": "game:crop-spelt",
+    "CodeResult": "game:crop-spelt",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-flax",
+    "Code2": "game:crop-flax",
+    "CodeResult": "game:crop-flax",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-carrot",
+    "Code2": "game:crop-carrot",
+    "CodeResult": "game:crop-carrot",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-sunflower",
+    "Code2": "game:crop-sunflower",
+    "CodeResult": "game:crop-sunflower",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-onion",
+    "Code2": "game:crop-onion",
+    "CodeResult": "game:crop-onion",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-turnip",
+    "Code2": "game:crop-turnip",
+    "CodeResult": "game:crop-turnip",
+    "Chance": 0.95
+  },
+  {
+    "Code1": "game:crop-amaranth",
+    "Code2": "game:crop-amaranth",
+    "CodeResult": "game:crop-amaranth",
+    "Chance": 0.95
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "beet",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 2
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "cauliflower",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 6
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "corn",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "eggplant",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 2
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "jalapeno",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "potato",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  },
+  {
+    "enabled": true,
+    "domain": "potatoes",
+    "id": "yam",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  },
+  {
+    "enabled": true,
+    "domain": "hideandfabric",
+    "id": "cotton",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  },
+  {
+    "enabled": true,
+    "domain": "hideandfabric",
+    "id": "jute",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  }
+]

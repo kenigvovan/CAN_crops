@@ -1,0 +1,42 @@
+﻿{
+  "game:tabname-cancrops": "CANCrops",
+  "item-selectionsticksitem": "Selection sticks",
+  "block-selectionsticksblock-1": "Single sticks",
+  "block-selectionsticksblock-2": "Double sticks",
+  "crop-next-stage-in": "Next stage in {0} day(s)",
+  "crop-next-stage-in-less-1": "Next stage in less than 1 day.",
+
+  "gain-stat": "Gain",
+  "growth-stat": "Growth",
+  "resistance-stat": "Resistance",
+  "strength-stat": "Strength",
+
+
+
+  "item-canseeds-carrot": "Carrot seeds",
+  "item-canseeds-flax": "Flax seeds",
+  "item-canseeds-onion": "Onion seeds",
+  "item-canseeds-spelt": "Spelt seeds",
+  "item-canseeds-turnip": "Turnip seeds",
+  "item-canseeds-parsnip": "Parsnip seeds",
+  "item-canseeds-rice": "Rice seeds",
+  "item-canseeds-rye": "Rye seeds",
+  "item-canseeds-soybean": "Soybean seeds",
+  "item-canseeds-pumpkin": "Pumpkin seeds",
+  "item-canseeds-pineapple": "Pineapple seeds",
+  "item-canseeds-cassava": "Cassava seeds",
+  "item-canseeds-amaranth": "Amaranth seeds",
+  "item-canseeds-bellpepper": "Bell pepper seeds",
+  "block-canfarmland-dry-verylow": "Dry Farmland (Barren)(CAN)",
+  "block-canfarmland-dry-low": "Dry Farmland (Low Fertility)(CAN)",
+  "block-canfarmland-dry-medium": "Dry Farmland (Medium Fertility)(CAN)",
+  "block-canfarmland-dry-high": "Dry Farmland (Terra preta)(CAN)",
+  "block-canfarmland-dry-compost": "Dry Farmland (High Fertility)(CAN)",
+  "block-canfarmland-moist-verylow": "Moist Farmland (Barren)(CAN)",
+  "block-canfarmland-moist-low": "Moist Farmland (Low Fertility)(CAN)",
+  "block-canfarmland-moist-medium": "Moist Farmland (Medium Fertility)(CAN)",
+  "block-canfarmland-moist-high": "Moist Farmland (Terra preta)(CAN)",
+  "block-canfarmland-moist-compost": "Moist Farmland (High Fertility)(CAN)"
+
+
+}
