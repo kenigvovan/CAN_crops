@@ -98,10 +98,17 @@ namespace cancrops.src
                     targetPos = targetPos.DownCopy(1);
                 }
             }
-            CANBlockEntityFarmland be = world.BlockAccessor.GetBlockEntity(targetPos) as CANBlockEntityFarmland;
+            BlockEntity be =  world.BlockAccessor.GetBlockEntity(targetPos);
             if (be != null)
             {
-                be.WaterFarmland(secondsUsed - prevsecondsused, true);
+                if (be is CANBlockEntityFarmland)
+                {
+                    (be as CANBlockEntityFarmland).WaterFarmland(secondsUsed - prevsecondsused, true);
+                }
+                else if (be is BlockEntityFarmland)
+                {
+                    (be as BlockEntityFarmland).WaterFarmland(secondsUsed - prevsecondsused, true);
+                }
             }
             float speed = 3f;
             if (world.Side == EnumAppSide.Client)
@@ -284,6 +291,11 @@ namespace cancrops.src
         public static bool Prefix_GetPlacedBlockInfo(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer forPlayer, ref string __result)
         {
             Block block = world.BlockAccessor.GetBlock(pos.DownCopy(1));
+            if (block is BlockFarmland)
+            {
+                return true;
+            }
+            
             if (block is CANBlockFarmland)
             {
                 __result = block.GetPlacedBlockInfo(world, pos.DownCopy(1), forPlayer);

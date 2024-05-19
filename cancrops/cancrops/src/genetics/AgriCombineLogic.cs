@@ -44,7 +44,7 @@ namespace cancrops.src.genetics
         }
         protected Allele pickRandomAllele(Gene pair, int statValue, Random random)
         {
-            var allele = (random.Next(1) > 0) ? new Allele(pair.Dominant.Value): new Allele(pair.Recessive.Value);
+            var allele = (random.Next(6) > 0) ? new Allele(pair.Dominant.Value): new Allele(pair.Recessive.Value);
             // Mutativity stat of 1 results in 25/50/25 probability of positive/no/negative mutation
             // Mutativity stat of 10 results in 100/0/0 probability of positive/no/negative mutation
             int max = cancrops.config.maxMutativity;

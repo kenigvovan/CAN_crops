@@ -26,6 +26,9 @@ namespace cancrops.src.blockenities
 {
     public class CANBlockEntityFarmland : BlockEntity, IFarmlandBlockEntity, IAnimalFoodSource, IPointOfInterest, ITexPositionSource
     {
+        /*bool IsSuitableFor(Entity entity, CreatureDiet diet);
+
+    float ConsumeOnePortion(Entity entity);*/
         private string[] creatureFoodTags;
 
         public override void Initialize(ICoreAPI api)
@@ -642,6 +645,11 @@ namespace cancrops.src.blockenities
                     rnd -= (double)this.blockFarmland.WeedNames[l].Chance;
                     if (rnd <= 0.0)
                     {
+                        if(this.cropSticksVariant != EnumCropSticksVariant.NONE)
+                        {
+                            this.cropSticksVariant = EnumCropSticksVariant.NONE;
+                            this.MarkDirty();
+                        }
                         Block weedsBlock = this.Api.World.GetBlock(this.blockFarmland.WeedNames[l].Code);
                         if (weedsBlock != null)
                         {
@@ -1046,10 +1054,10 @@ namespace cancrops.src.blockenities
                         KeyValuePair<string, IAttribute> val = enumerator.Current;
                         this.fertilizerOverlayStrength[val.Key] = (val.Value as FloatAttribute).value;
                     }
-                    goto IL_316;
+                    //goto IL_316;
                 }
             }
-            this.fertilizerOverlayStrength = null;
+            //this.fertilizerOverlayStrength = null;
             //cropSticksVariant
             var tmpStick = (EnumCropSticksVariant)tree.GetInt("cropSticksVariant");
             if (cropSticksVariant != tmpStick)
@@ -1327,21 +1335,30 @@ namespace cancrops.src.blockenities
 
         public bool IsSuitableFor(Entity entity, CreatureDiet diet)
         {
-            return diet != null && this.GetCrop() != null && diet.Matches(EnumFoodCategory.NoNutrition, this.creatureFoodTags);
+            if (diet == null)
+            {
+                return false;
+            }
+            Block crop = this.GetCrop();
+            if (crop == null)
+            {
+                return false;
+            }
+            return diet.Matches(EnumFoodCategory.NoNutrition, this.creatureFoodTags);
         }
 
 
         public float ConsumeOnePortion(Entity entity)
         {
-            Block cropBlock = this.GetCrop();
-            if (cropBlock == null)
+            Block crop = this.GetCrop();
+            if (crop == null)
             {
                 return 0f;
             }
-            Block deadCropBlock = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
-            this.Api.World.BlockAccessor.SetBlock(deadCropBlock.Id, this.upPos);
+            Block block = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
+            this.Api.World.BlockAccessor.SetBlock(block.Id, this.upPos);
             BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
-            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(cropBlock, 1);
+            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(crop, 1);
             blockEntityDeadCrop.deathReason = EnumCropStressType.Eaten;
             return 1f;
         }

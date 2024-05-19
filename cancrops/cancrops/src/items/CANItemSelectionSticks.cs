@@ -59,69 +59,14 @@ namespace cancrops.src.items
         {
             base.OnLoaded(api);
             this.capi = (api as ICoreClientAPI);
-            // this.durabilityGains = this.Attributes["durabilityGains"].AsObject<Dictionary<string, Dictionary<string, int>>>(null);
-            //this.AddAllTypesToCreativeInventory();
         }
-       /* public MeshData GenMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas)
-        {
-            this.targetAtlas = targetAtlas;
-            this.tmpTextures.Clear();
 
-
-            string gemBase = itemstack.Attributes.GetString("gembase", null);
-            string gemSize = itemstack.Attributes.GetString("gemsize", null);
-
-            foreach (KeyValuePair<string, AssetLocation> ctex in this.capi.TesselatorManager.GetCachedShape(this.Shape.Base).Textures)
-            {
-                this.tmpTextures[ctex.Key] = ctex.Value;
-            }
-            var f = this.capi.TesselatorManager.GetCachedShape(this.Shape.Base);
-            string construction = this.Construction;
-            ITreeAttribute itree;
-            if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
-            {
-                itree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-
-                gemBase = itree.GetString("gembase");
-                gemSize = itree.GetString("gemsize");
-                if (gemBase.Equals("olivine_peridot"))
-                {
-                    gemBase = "olivine";
-                }
-                this.tmpTextures["gembase"] = new AssetLocation("game:block/stone/gem/" + gemBase + ".png");
-                if (itree.GetInt("grindtype") <= 0)
-                {
-                    this.tmpTextures["emeralddefect0"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
-                }
-                else
-                {
-                    this.tmpTextures["emeralddefect0"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-
-                if (itree.GetInt("grindtype") <= 1)
-                {
-                    this.tmpTextures["emeralddefect1"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
-                }
-                else
-                {
-                    this.tmpTextures["emeralddefect1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                this.tmpTextures["emeralddefect2"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
-            }
-            else
-            {
-                if (gemBase.Equals("olivine_peridot"))
-                {
-                    gemBase = "olivine";
-                }
-                this.tmpTextures["gembase"] = new AssetLocation("game:block/stone/gem/" + gemBase + ".png");
-            }
-            MeshData mesh;
-            this.capi.Tesselator.TesselateItem(this, out mesh, this);
-            return mesh;
-        }*/
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
         {
+            if(blockSel == null)
+            {
+                base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handling);
+            }
             Block selectedBlock = api.World.BlockAccessor.GetBlock(blockSel.Position);
             if (selectedBlock is CANBlockFarmland || selectedBlock is BlockCrop)
             {
