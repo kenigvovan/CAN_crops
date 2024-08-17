@@ -26,9 +26,6 @@ namespace cancrops.src.blockenities
 {
     public class CANBlockEntityFarmland : BlockEntity, IFarmlandBlockEntity, IAnimalFoodSource, IPointOfInterest, ITexPositionSource
     {
-        /*bool IsSuitableFor(Entity entity, CreatureDiet diet);
-
-    float ConsumeOnePortion(Entity entity);*/
         private string[] creatureFoodTags;
 
         public override void Initialize(ICoreAPI api)
@@ -78,6 +75,19 @@ namespace cancrops.src.blockenities
             {
                 currentRightMesh = GenRightMesh();
                 MarkDirty(true);
+            }
+            if (this.Api.Side == EnumAppSide.Server)
+            {
+                BlockPos tmpPos;
+                foreach (var dir in BlockFacing.HORIZONTALS)
+                {
+                    tmpPos = this.Pos.AddCopy(dir);
+                    BlockEntity blockEntityFarmland = this.Api.World.BlockAccessor.GetBlockEntity(tmpPos);
+                    if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
+                    {
+                        befl.OnNeighbouropPlaced(dir.Opposite, this);
+                    }
+                }
             }
         }
 
@@ -177,7 +187,7 @@ namespace cancrops.src.blockenities
             {
                 this.damageAccum[i] = 0f;
             }
-            /*if (this.Api.Side == EnumAppSide.Server)
+            if (this.Api.Side == EnumAppSide.Server)
             {
                 BlockPos tmpPos;
                 foreach (var dir in BlockFacing.HORIZONTALS)
@@ -189,7 +199,7 @@ namespace cancrops.src.blockenities
                         befl.OnNeighbourBroken(dir.Opposite);
                     }
                 }
-            }*/
+            }
             this.MarkDirty(true, null);
         }
 
@@ -197,6 +207,10 @@ namespace cancrops.src.blockenities
         {
 
             List<ItemStack> li = new List<ItemStack>();
+            if(drops == null)
+            {
+                return li;
+            }
             foreach (var it in drops)
             {
                 if (!(it.Item is ItemPlantableSeed))
@@ -209,8 +223,6 @@ namespace cancrops.src.blockenities
 
         public void ApplyStrengthBuff(List<ItemStack> drops)
         {
-            var f = 3;
-            f = 3;
             foreach(var it in drops)
             {
                 float[] freshHours;
@@ -245,9 +257,14 @@ namespace cancrops.src.blockenities
             {
                 return drops;
             }
+            
             List<ItemStack> newDrops = RemoveDefaultSeeds(drops);
             BlockEntityDeadCrop beDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
 
+            if(agriPlant == null)
+            {
+                return null;
+            }
             if (rand.NextDouble() < (agriPlant.SeedDropChance + agriPlant.SeedDropBonus /** GetCropStage(this.Block)*/))
             {
                 var seed = CommonUtils.GetSeedItemStackFromFarmland(this.Genome, agriPlant);
@@ -431,6 +448,7 @@ namespace cancrops.src.blockenities
             {
                 return;
             }
+            //var c = AgriPlantRequirmentChecker.CheckAgriPlantRequirements(this);
             double hoursNextStage = this.GetHoursForNextStage();
             bool nearbyWaterTested = false;
             double nowTotalHours = this.Api.World.Calendar.TotalHours;
@@ -449,12 +467,23 @@ namespace cancrops.src.blockenities
                 return;
             }
             int lightpenalty = 0;
-            if (!this.allowundergroundfarming)
+            //set penalty if config value is set and plant doesn't have override for undergroud
+            if (!this.allowundergroundfarming && (!this.hasPlant() || !this.agriPlant.AllowUnderGround))
             {
                 lightpenalty = Math.Max(0, this.Api.World.SeaLevel - this.Pos.Y);
             }
+
             int sunlight = this.Api.World.BlockAccessor.GetLightLevel(this.upPos, EnumLightLevelType.MaxLight);
-            double lightGrowthSpeedFactor = (double)GameMath.Clamp(1f - (float)(this.blockFarmland.DelayGrowthBelowSunLight - sunlight - lightpenalty) * this.blockFarmland.LossPerLevel, 0f, 1f);
+            double lightGrowthSpeedFactor = 0;
+            if ((!this.hasPlant() || !this.agriPlant.AllowUnderGround))
+            {
+                lightGrowthSpeedFactor = (double)GameMath.Clamp(1f - (float)(this.blockFarmland.DelayGrowthBelowSunLight - sunlight - lightpenalty) * this.blockFarmland.LossPerLevel, 0f, 1f);
+            }
+            else
+            {
+                lightGrowthSpeedFactor = 1f;
+            }
+            
             
             
             Block upblock = this.Api.World.BlockAccessor.GetBlock(this.upPos);
@@ -629,7 +658,10 @@ namespace cancrops.src.blockenities
                     }
                     if ((double)this.moistureLevel >= 0.1 && totalHoursNextGrowthState <= this.totalHoursLastUpdate)
                     {
-                        this.TryGrowCrop(this.totalHoursForNextStage);
+                        if (AgriPlantRequirmentChecker.CheckAgriPlantRequirements(this))
+                        {
+                            this.TryGrowCrop(this.totalHoursForNextStage);
+                        }
                         this.totalHoursForNextStage += hoursNextStage;
                         totalHoursNextGrowthState = this.totalHoursForNextStage + lightHoursPenalty;
                         hoursNextStage = this.GetHoursForNextStage();
@@ -748,6 +780,10 @@ namespace cancrops.src.blockenities
                 return 0.5f;
             }
             return 0f;
+        }
+        public bool HasAgriPlant()
+        {
+            return agriPlant != null;
         }
 
         public bool TryPlant(Block block, ItemStack itemStack, AgriPlant agriPlant)
@@ -1124,7 +1160,7 @@ namespace cancrops.src.blockenities
                 }
                 if (agriPlant != null)
                 {
-                    tree.SetString("plant", this.agriPlant.Id);
+                    tree.SetString("plant", this.agriPlant.Domain + ":" + this.agriPlant.Id);
                 }
             }
         }

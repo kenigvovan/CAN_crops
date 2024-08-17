@@ -153,7 +153,7 @@ namespace cancrops.src
             }
 
             BlockPos position = blockSel.Position;
-            string text = itemslot.Itemstack.Collectible.LastCodePart();
+            string text = itemslot.Itemstack.Collectible.Code.Domain + ":" + itemslot.Itemstack.Collectible.LastCodePart();
             if (text == "bellpepper")
             {
                 return false;
@@ -175,7 +175,7 @@ namespace cancrops.src
                     return false;
                 }
 
-                Block block = byEntity.World.GetBlock((new AssetLocation(agriPlant.Domain + ":crop-" + text + "-1")));
+                Block block = byEntity.World.GetBlock((new AssetLocation(agriPlant.Domain + ":crop-" + text.Split(':')[1] + "-1")));
                 //"game:crop-" + text + "-1"));
 
                 if (block == null)
@@ -414,6 +414,10 @@ namespace cancrops.src
                 }
                 if (canbefarmland != null)
                 {
+                    if(!canbefarmland.hasPlant())
+                    {
+                        return true;
+                    }
                     candrops = canbefarmland.GetDrops(candrops, byPlayer);
                 }
                 __result = candrops;

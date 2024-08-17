@@ -8,10 +8,10 @@ namespace cancrops.src.templates
 {
     public class AgriRequirement
     {
-        public int Min_light { get; set; }
-        public int Max_light { get; set; }
-        public double Light_tolerance_factor { get; set; }
-
+        public int LightLevelType { get; set; }
+        public int MinLight { get; set; }
+        public int MaxLight { get; set; }
+        public double LightToleranceFactor { get; set; }
         public List<AgriBlockCondition> Conditions { get; set; }
     }
 }

@@ -155,7 +155,7 @@ namespace cancrops.src
 
         public void InitPlants(ICoreServerAPI api)
         {
-            api.Logger.Debug("[cancrops] InitPlants");
+            api.Logger.VerboseDebug("[cancrops] InitPlants");
             Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/plants_jsons");
             
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
@@ -163,12 +163,12 @@ namespace cancrops.src
                 if (val.Value is JObject)
                 {
                     var readPlant = val.Value.ToObject<AgriPlant>();
-                    if(readPlant.Enabled)
+                    if (readPlant.Enabled)
                     {
                         //plants.addPlant(readPlant);
                         if (agriPlants.addPlant(readPlant))
                         {
-                            api.Logger.Debug(string.Format("[cancrops] InitPlants::added {0}", readPlant.Id));
+                            api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}", readPlant.Id));
                         }
                     }
                 }
@@ -177,11 +177,15 @@ namespace cancrops.src
                     foreach (JToken token in (val.Value as JArray))
                     {
                         var readPlant = token.ToObject<AgriPlant>();
+                        if(readPlant.Id.Contains("fieldmushroom"))
+                        {
+                            var c = 3;
+                        }
                         if (readPlant.Enabled)
                         {
                             if(agriPlants.addPlant(readPlant))
                             {
-                                api.Logger.Debug(string.Format("[cancrops] InitPlants::added {0}", readPlant.Id));
+                                api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}:{1}", readPlant.Domain, readPlant.Id));
                             }
                         }
                     }
@@ -190,7 +194,7 @@ namespace cancrops.src
         }
         public void InitMutations(ICoreServerAPI api)
         {
-            api.Logger.Debug("[cancrops] InitMutations");
+            api.Logger.VerboseDebug("[cancrops] InitMutations");
             Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/mutations_jsons");
 
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
@@ -203,7 +207,7 @@ namespace cancrops.src
                         //plants.addPlant(readPlant);
                         if (agriMutations.AddMutation(mutations))
                         {
-                            api.Logger.Debug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
+                            api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
                         }
                     }
                 }
@@ -216,7 +220,7 @@ namespace cancrops.src
                         {
                             if (agriMutations.AddMutation(mutations))
                             {
-                                api.Logger.Debug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
+                                api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
                             }
                         }
                     }

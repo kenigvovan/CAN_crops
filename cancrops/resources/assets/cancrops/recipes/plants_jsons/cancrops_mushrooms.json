@@ -1,0 +1,21 @@
+[
+  {
+    "enabled": true,
+    "domain": "cancrops",
+    "id": "fieldmushroom",
+    "growthmultiplier": 1.0,
+    "AllowUnderGround": true,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3,
+    "requirement": {
+      "LightLevelType": 2,
+      "MinLight": 4,
+      "MaxLight": 9,
+      "LightToleranceFactor": 0.5,
+      "Conditions": []
+    }
+  }
+]

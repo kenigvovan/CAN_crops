@@ -36,7 +36,10 @@
   "block-canfarmland-moist-low": "Moist Farmland (Low Fertility)(CAN)",
   "block-canfarmland-moist-medium": "Moist Farmland (Medium Fertility)(CAN)",
   "block-canfarmland-moist-high": "Moist Farmland (Terra preta)(CAN)",
-  "block-canfarmland-moist-compost": "Moist Farmland (High Fertility)(CAN)"
+  "block-canfarmland-moist-compost": "Moist Farmland (High Fertility)(CAN)",
+  "block-crop-fieldmushroom-*": "Field mushroom",
+  "seeds-fieldmushroom": "Field mushroom mycelium"
+  
 
 
 }

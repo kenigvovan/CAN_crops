@@ -1,0 +1,13 @@
+[
+  {
+    "file": "cancrops:blocktypes/farmland",
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "FarmlandDropsSoilBehavior" } ],
+    "dependsOn": [
+      {
+        "modid": "farmlanddropssoil"
+      }
+    ]
+  }
+]

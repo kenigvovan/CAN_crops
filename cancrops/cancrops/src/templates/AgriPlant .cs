@@ -17,7 +17,7 @@ namespace cancrops.src.templates
         public string Domain { get; set; }
         public string Id { get; set; }
         public float GrowthMultiplier {  get; set; }
-
+        public bool AllowUnderGround { get; set; }
         public bool Cloneable { get; set; }
         public double SpreadChance { get; set; }
         public double SeedDropChance { get; set; }

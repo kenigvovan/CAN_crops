@@ -22,7 +22,7 @@ namespace cancrops.src.utility
 
         public bool addPlant(AgriPlant plant)
         {
-            return plants.TryAdd(plant.Id, plant);
+            return plants.TryAdd(plant.Domain + ":" + plant.Id, plant);
         }
 
         public AgriPlant getPlant(string id)

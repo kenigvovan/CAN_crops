@@ -1,0 +1,112 @@
+{
+  "code": "crop",
+	"class": "BlockCrop",
+	"behaviors": [{"name": "Unstable"}],
+	"variantgroups": [
+		{ "loadFromProperties": "game:block/mushroom" },
+		{
+			"code": "stage",
+			"states": [ "1", "2", "3", "4" ]
+		}
+	],
+	"creativeinventory": { "general": [""], "plants": [""] },
+	"renderpass": "OpaqueNoCull",
+	"shapeByType": {
+		"*-1": { "base": "game:block/plant/mushroom/{mushroom}/harvested*" },
+		"*-2": { "base": "game:block/plant/mushroom/{mushroom}/harvested*" },
+		"*-3": { "base": "cancrops:block/plant/mushroom/{mushroom}/normal2" },
+		"*-4": { "base": "game:block/plant/mushroom/{mushroom}/normal*" }
+	},
+	"blockmaterial": "Plant",
+	"randomizeRotations": true,
+	"randomDrawOffset": true,
+	"attributes": {
+		"foodTagsByType": {
+			"*-1": ["nibbleCrop"],
+			"*-2": ["nibbleCrop"],
+			"*-3": ["nibbleCrop"]
+		},
+		"butterflyFeedByType": {
+			"*-1": false,
+			"*-2": false,
+			"*-3": false,
+			"*": false
+		},
+		"beeFeedByType": {
+			"*-1": false,
+			"*-2": false,
+			"*-3": false,
+			"*": false
+		},
+		"sitHeightByType": {
+			"*-4": 0.7
+		},
+		"tickGrowthProbability": 0.05,
+		"handbook": {
+			"includeByType": {
+				"*-9": true,
+				"*": false
+			}
+		},
+		"overrideRandomDrawOffset": 14
+	},
+	"sideopaque": {
+		"all": false
+	},
+	"sidesolid": {
+		"all": false
+	},
+	"replaceable": 3000,
+	"lightAbsorption": 0,
+	"resistance": 0.5,
+	"sounds": {
+		"place": "game:block/plant",
+		"break": "game:block/plant",
+		"hit": "game:block/plant"
+	},
+	"rainPermeable": false,
+	"dropsByType": {
+		"*-4": [
+			{
+				"type": "item",
+				"code": "cancrops:seeds-{mushroom}",
+				"quantity": { "avg": 1 }
+			},
+			{
+				"type": "block",
+				"code": "game:mushroom-{mushroom}-normal",
+				"quantity": {
+					"avg": 1,
+					"var": 0.5
+				}
+			}
+		],
+		"*": [
+			{
+				"type": "item",
+				"code": "cancrops:seeds-{mushroom}",
+				"quantity": { "avg": 0.7 }
+			}
+		]
+	},
+	"cropProps": {
+		"requiredNutrient": "N",
+		"nutrientConsumption": 25,
+		"growthStages": 4,
+		"totalGrowthMonths": 2,
+		"coldDamageBelow": -2,
+		"heatDamageAbove": 32
+	},
+	"collisionbox": null,
+	"selectionBoxByType": {
+		"*-1": { "x1": 0.125, "y1": -0.0625, "z1": 0.125, "x2": 0.875, "y2": 0.175, "z2": 0.875 },
+		"*-2": { "x1": 0.125, "y1": -0.0625, "z1": 0.125, "x2": 0.875, "y2": 0.3, "z2": 0.875 },
+		"*-3": { "x1": 0.125, "y1": -0.0625, "z1": 0.125, "x2": 0.875, "y2": 0.45, "z2": 0.875 },
+		"*-4": { "x1": 0.125, "y1": -0.0625, "z1": 0.125, "x2": 0.875, "y2": 0.625, "z2": 0.875 }
+	},
+	"materialDensity": 200,
+	"combustibleProps": {
+		"burnTemperature": 600,
+		"burnDuration": 10
+	}
+}

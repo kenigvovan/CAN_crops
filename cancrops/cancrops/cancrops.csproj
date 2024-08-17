@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="FarmlandDropsSoil">
+      <HintPath>..\..\..\..\..\..\Desktop\FarmlandDropsSoil.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="primitivesurvival">
+      <HintPath>..\..\..\..\..\..\Desktop\for_vs_libs\primitivesurvival.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="VintagestoryAPI">
       <HintPath>$(VINTAGE_STORY)/VintagestoryAPI.dll</HintPath>
       <Private>false</Private>
@@ -41,6 +49,14 @@
     </Reference>
     <Reference Include="cairo-sharp">
       <HintPath>$(VINTAGE_STORY)/Lib/cairo-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="xlib">
+      <HintPath>..\..\..\..\..\..\Desktop\for_vs_libs\xlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="xskills">
+      <HintPath>..\..\..\..\..\..\Desktop\for_vs_libs\xskills.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

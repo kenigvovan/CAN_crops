@@ -214,5 +214,14 @@
     "cropName": "hideandfabric:crop-jute",
     "seedName": "hideandfabric:seeds-jute",
     "tier": 1
+  },
+  "cancrops:crop-fieldmushroom": {
+    "minTemp": -5,
+    "maxTemp": 40,
+    "minLightLevel": 16,
+    "maxLightLevel": 50,
+    "cropName": "cancrops:crop-fieldmushroom",
+    "seedName": "cancrops:seeds-fieldmushroom",
+    "tier": 1
   }
 }
