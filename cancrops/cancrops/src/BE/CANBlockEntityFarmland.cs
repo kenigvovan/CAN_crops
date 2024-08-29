@@ -1,8 +1,10 @@
-﻿using cancrops.src.blocks;
+﻿using cancrops.src.BE;
+using cancrops.src.blocks;
 using cancrops.src.genetics;
+using cancrops.src.implementations;
 using cancrops.src.items;
-using cancrops.src.templates;
 using cancrops.src.utility;
+using PrimitiveSurvival.ModSystem;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,13 +23,177 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
+using static Vintagestory.Server.Timer;
 
 namespace cancrops.src.blockenities
 {
     public class CANBlockEntityFarmland : BlockEntity, IFarmlandBlockEntity, IAnimalFoodSource, IPointOfInterest, ITexPositionSource
     {
+        MeshData currentRightMesh;
+        public Genome Genome;
+        public AgriPlant agriPlant;
+        protected static Random rand = new Random();
+        public static OrderedDictionary<string, float> Fertilities = new OrderedDictionary<string, float>
+        {
+            {
+                "verylow",
+                5f
+            },
+            {
+                "low",
+                25f
+            },
+            {
+                "medium",
+                50f
+            },
+            {
+                "compost",
+                65f
+            },
+            {
+                "high",
+                80f
+            }
+        };
+        protected HashSet<string> PermaBoosts = new HashSet<string>();
+        protected double totalHoursWaterRetention = 24.5;       
+        protected Dictionary<string, float> fertilizerOverlayStrength;
+        protected double lastWaterSearchedTotalHours;
+        protected TreeAttribute cropAttrs = new TreeAttribute();
+        protected bool unripeCropColdDamaged;
+        protected bool unripeHeatDamaged;
+        protected bool ripeCropColdDamaged;
+        protected bool saltExposed;
+        protected float[] damageAccum = new float[Enum.GetValues(typeof(EnumCropStressType)).Length];
+        private CANBlockFarmland blockFarmland;
+        protected Vec3d tmpPos = new Vec3d();
+        protected float lastWaterDistance = 99f;
+        protected double lastMoistureLevelUpdateTotalDays;
+        public int roomness;
+        protected bool allowundergroundfarming;
+        protected bool allowcropDeath;
+        protected float fertilityRecoverySpeed = 0.25f;
+        protected float growthRateMul = 1f;
+        protected MeshData fertilizerQuad;
+        protected TextureAtlasPosition fertilizerTexturePos;
+        private ICoreClientAPI capi;
+        private bool farmlandIsAtChunkEdge;
+        public Vec3d Position
+        {
+            get
+            {
+                return this.Pos.ToVec3d().Add(0.5, 1.0, 0.5);
+            }
+        }
+        public string Type
+        {
+            get
+            {
+                return "food";
+            }
+        }
+        BlockPos IFarmlandBlockEntity.Pos
+        {
+            get
+            {
+                return this.Pos;
+            }
+        }
+        public Size2i AtlasSize
+        {
+            get
+            {
+                return this.capi.BlockTextureAtlas.Size;
+            }
+        }
+        protected enum EnumWaterSearchResult
+        {
+            Found,
+            NotFound,
+            Deferred
+        }
+        protected double totalHoursForNextStage;
+        protected double totalHoursLastUpdate;
+        public double TotalHoursForNextStage
+        {
+            get
+            {
+                return this.totalHoursForNextStage;
+            }
+        }
+        public double TotalHoursFertilityCheck
+        {
+            get
+            {
+                return this.totalHoursLastUpdate;
+            }
+        }
+        protected float[] nutrients = new float[3];
+        protected float[] slowReleaseNutrients = new float[3];
+        public float[] Nutrients
+        {
+            get
+            {
+                return this.nutrients;
+            }
+        }
+        protected float moistureLevel;
+        public float MoistureLevel
+        {
+            get
+            {
+                return this.moistureLevel;
+            }
+        }
+        public int[] originalFertility = new int[3];
+        public int[] OriginalFertility
+        {
+            get
+            {
+                return this.originalFertility;
+            }
+        }
+        protected BlockPos upPos;
+        public BlockPos UpPos
+        {
+            get
+            {
+                return this.upPos;
+            }
+        }
+        public ITreeAttribute CropAttributes
+        {
+            get
+            {
+                return this.cropAttrs;
+            }
+        }
+        public bool IsVisiblyMoist
+        {
+            get
+            {
+                return (double)this.moistureLevel > 0.1;
+            }
+        }
         private string[] creatureFoodTags;
+        private Dictionary<BlockFacing, CANBlockEntityFarmland> neighbours = new Dictionary<BlockFacing, CANBlockEntityFarmland>();
+        private EnumCropSticksVariant cropSticksVariant = EnumCropSticksVariant.NONE;
+        private WeedStage weedStage = WeedStage.NONE;
+        public TextureAtlasPosition this[string textureCode]
+        {
+            get
+            {
+                return this.fertilizerTexturePos;
+            }
+        }
 
+
+        /**************************************************************************
+         **************************************************************************
+         *******************************OVERRIDEN**********************************
+         **************************************************************************
+         **************************************************************************/
         public override void Initialize(ICoreAPI api)
         {          
             base.Initialize(api);
@@ -36,8 +202,14 @@ namespace cancrops.src.blockenities
             {
                 return;
             }
-            if(api.Side == EnumAppSide.Client)
-            this.capi = (api as ICoreClientAPI);
+            if (api.Side == EnumAppSide.Client)
+            {
+                this.capi = (api as ICoreClientAPI);
+            }
+            else
+            {
+                //this.
+            }
             this.totalHoursWaterRetention = (double)this.Api.World.Calendar.HoursPerDay + 0.5;
             this.upPos = this.Pos.UpCopy(1);
             this.allowundergroundfarming = this.Api.World.Config.GetBool("allowUndergroundFarming", false);
@@ -56,6 +228,16 @@ namespace cancrops.src.blockenities
                 //init be farmlands around
                 //only need when genome is set to be able to cross breed
                 //ReadNeighbours();
+                BlockPos tmpPos;
+                foreach (var dir in BlockFacing.HORIZONTALS)
+                {
+                    tmpPos = this.Pos.AddCopy(dir);
+                    BlockEntity blockEntityFarmland = this.Api.World.BlockAccessor.GetBlockEntity(tmpPos);
+                    if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
+                    {
+                        befl.OnNeighbouropPlaced(dir.Opposite, this);
+                    }
+                }
             }
             else
             {
@@ -64,10 +246,9 @@ namespace cancrops.src.blockenities
                     this.currentRightMesh = this.GenRightMesh();
                     this.MarkDirty(true);
                 }
-            }
+            }           
             this.updateFertilizerQuad();
         }
-
         public override void OnBlockPlaced(ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(byItemStack);
@@ -90,945 +271,6 @@ namespace cancrops.src.blockenities
                 }
             }
         }
-
-        public void OnCreatedFromSoil(Block block)
-        {
-            string fertility = block.LastCodePart(1);
-            if (block is BlockFarmland)
-            {
-                fertility = block.LastCodePart(0);
-            }
-            this.originalFertility[0] = (int)CANBlockEntityFarmland.Fertilities[fertility];
-            this.originalFertility[1] = (int)CANBlockEntityFarmland.Fertilities[fertility];
-            this.originalFertility[2] = (int)CANBlockEntityFarmland.Fertilities[fertility];
-            this.nutrients[0] = (float)this.originalFertility[0];
-            this.nutrients[1] = (float)this.originalFertility[1];
-            this.nutrients[2] = (float)this.originalFertility[2];
-            this.totalHoursLastUpdate = this.Api.World.Calendar.TotalHours;
-            this.tryUpdateMoistureLevel(this.Api.World.Calendar.TotalDays, true);
-        }
-
-        public bool OnBlockInteract(IPlayer byPlayer)
-        {
-            ItemStack stack = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack;
-            JsonObject jsonObject;
-            if (stack == null)
-            {
-                jsonObject = null;
-            }
-            else
-            {
-                CollectibleObject collectible = stack.Collectible;
-                if (collectible == null)
-                {
-                    jsonObject = null;
-                }
-                else
-                {
-                    JsonObject attributes = collectible.Attributes;
-                    jsonObject = ((attributes != null) ? attributes["fertilizerProps"] : null);
-                }
-            }
-            JsonObject obj = jsonObject;
-            if (obj == null || !obj.Exists)
-            {
-                return false;
-            }
-            FertilizerProps props = obj.AsObject<FertilizerProps>(null);
-            if (props == null)
-            {
-                return false;
-            }
-            float nAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[0]), props.N);
-            float pAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[1]), props.P);
-            float kAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[2]), props.K);
-            this.slowReleaseNutrients[0] += nAdd;
-            this.slowReleaseNutrients[1] += pAdd;
-            this.slowReleaseNutrients[2] += kAdd;
-            if (props.PermaBoost != null && !this.PermaBoosts.Contains(props.PermaBoost.Code))
-            {
-                this.originalFertility[0] += props.PermaBoost.N;
-                this.originalFertility[1] += props.PermaBoost.P;
-                this.originalFertility[2] += props.PermaBoost.K;
-                this.PermaBoosts.Add(props.PermaBoost.Code);
-            }
-            string fertCode = stack.Collectible.Attributes["fertilizerTextureCode"].AsString(null);
-            if (fertCode != null)
-            {
-                if (this.fertilizerOverlayStrength == null)
-                {
-                    this.fertilizerOverlayStrength = new Dictionary<string, float>();
-                }
-                float prevValue;
-                this.fertilizerOverlayStrength.TryGetValue(fertCode, out prevValue);
-                this.fertilizerOverlayStrength[fertCode] = prevValue + Math.Max(nAdd, Math.Max(kAdd, pAdd));
-            }
-            this.updateFertilizerQuad();
-            byPlayer.InventoryManager.ActiveHotbarSlot.TakeOut(1);
-            byPlayer.InventoryManager.ActiveHotbarSlot.MarkDirty();
-            IClientPlayer clientPlayer = byPlayer as IClientPlayer;
-            if (clientPlayer != null)
-            {
-                clientPlayer.TriggerFpAnimation(EnumHandInteract.HeldItemInteract);
-            }
-            this.Api.World.PlaySoundAt(this.Api.World.BlockAccessor.GetBlock(this.Pos).Sounds.Hit, (double)this.Pos.X + 0.5, (double)this.Pos.Y + 0.75, (double)this.Pos.Z + 0.5, byPlayer, true, 12f, 1f);
-            this.MarkDirty(false, null);
-            return true;
-        }
-
-        public void OnCropBlockBroken(IPlayer byPlayer)
-        {
-            this.ripeCropColdDamaged = false;
-            this.unripeCropColdDamaged = false;
-            this.unripeHeatDamaged = false;
-            this.Genome = null;
-            this.agriPlant = null;
-            for (int i = 0; i < this.damageAccum.Length; i++)
-            {
-                this.damageAccum[i] = 0f;
-            }
-            if (this.Api.Side == EnumAppSide.Server)
-            {
-                BlockPos tmpPos;
-                foreach (var dir in BlockFacing.HORIZONTALS)
-                {
-                    tmpPos = this.Pos.AddCopy(dir);
-                    BlockEntity blockEntityFarmland = this.Api.World.BlockAccessor.GetBlockEntity(tmpPos);
-                    if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
-                    {
-                        befl.OnNeighbourBroken(dir.Opposite);
-                    }
-                }
-            }
-            this.MarkDirty(true, null);
-        }
-
-        public List<ItemStack> RemoveDefaultSeeds(ItemStack[] drops)
-        {
-
-            List<ItemStack> li = new List<ItemStack>();
-            if(drops == null)
-            {
-                return li;
-            }
-            foreach (var it in drops)
-            {
-                if (!(it.Item is ItemPlantableSeed))
-                {
-                    li.Add(it);
-                }
-            }
-            return li;
-        }
-
-        public void ApplyStrengthBuff(List<ItemStack> drops)
-        {
-            foreach(var it in drops)
-            {
-                float[] freshHours;
-                float[] transitionHours;
-                float[] transitionedHours;
-                TransitionableProperties[] propsm = it.Collectible.GetTransitionableProperties(Api.World, it, null);
-                ITreeAttribute attr = new TreeAttribute();
-                if (propsm != null)
-                    if (!it.Attributes.HasAttribute("createdTotalHours"))
-                    {
-                        attr.SetDouble("createdTotalHours", this.Api.World.Calendar.TotalHours);
-                        attr.SetDouble("lastUpdatedTotalHours", Api.World.Calendar.TotalHours);
-                        freshHours = new float[propsm.Length];
-                        transitionHours = new float[propsm.Length];
-                        transitionedHours = new float[propsm.Length];
-                        for (int i = 0; i < propsm.Length; i++)
-                        {
-                            transitionedHours[i] = 0f;
-                            freshHours[i] = propsm[i].FreshHours.nextFloat(1f, this.Api.World.Rand) * (1 + cancrops.config.strengthFreshHoursPercentBonus);
-                            transitionHours[i] = propsm[i].TransitionHours.nextFloat(1f, this.Api.World.Rand);
-                        }
-                        attr["freshHours"] = new FloatArrayAttribute(freshHours);
-                        attr["transitionHours"] = new FloatArrayAttribute(transitionHours);
-                        attr["transitionedHours"] = new FloatArrayAttribute(transitionedHours);
-                        it.Attributes["transitionstate"] = attr;
-                    }
-            }
-        }
-        public ItemStack[] GetDrops(ItemStack[] drops, IPlayer byPlayer)
-        {
-            if(this.upPos == null)
-            {
-                return drops;
-            }
-            
-            List<ItemStack> newDrops = RemoveDefaultSeeds(drops);
-            BlockEntityDeadCrop beDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
-
-            if(agriPlant == null)
-            {
-                return null;
-            }
-            if (rand.NextDouble() < (agriPlant.SeedDropChance + agriPlant.SeedDropBonus /** GetCropStage(this.Block)*/))
-            {
-                var seed = CommonUtils.GetSeedItemStackFromFarmland(this.Genome, agriPlant);
-                newDrops.Add(seed);
-            }
-
-            //if(Genome != null)
-            //{
-            int gain = Genome.Gain.Dominant.Value;
-            foreach (var it in newDrops)
-            {
-                if(it.Item is ItemPlantableSeed)
-                {
-                    Block block = this.GetCrop();
-                    int stage = 0;
-                    if(block != null)
-                    {
-                        stage = this.GetCropStage(block);
-                    }
-                    
-                    it.StackSize = Math.Min(2, (int)(agriPlant.SeedDropChance + agriPlant.SeedDropBonus * stage));
-                    continue;
-                        //(int)((gain * rand.Next(1, 3) * 0.2) * it.StackSize);
-                }
-                it.StackSize += (int)((gain * rand.Next(1, 3) * 0.2) * it.StackSize);                 
-            }
-            //}
-
-            bool isDead = beDeadCrop != null;
-            if (!this.ripeCropColdDamaged && !this.unripeCropColdDamaged && !this.unripeHeatDamaged && !isDead)
-            {
-                ApplyStrengthBuff(newDrops);
-                return newDrops.ToArray();
-            }
-            if (!this.Api.World.Config.GetString("harshWinters", null).ToBool(true))
-            {
-                ApplyStrengthBuff(newDrops);
-                return newDrops.ToArray();
-            }
-            List<ItemStack> stacks = new List<ItemStack>();
-            Block crop = this.GetCrop();
-            BlockCropProperties cropProps = (crop != null) ? crop.CropProps : null;
-            if (cropProps == null)
-            {
-                return drops;
-            }
-            float mul = 1f;
-            if (this.ripeCropColdDamaged)
-            {
-                mul = cropProps.ColdDamageRipeMul;
-            }
-            if (this.unripeHeatDamaged || this.unripeCropColdDamaged)
-            {
-                mul = cropProps.DamageGrowthStuntMul;
-            }
-            if (isDead)
-            {
-                mul = ((beDeadCrop.deathReason == EnumCropStressType.Eaten) ? 0f : Math.Max(cropProps.ColdDamageRipeMul, cropProps.DamageGrowthStuntMul));
-            }
-            foreach (ItemStack stack in newDrops)
-            {
-                if (stack.Collectible.NutritionProps == null)
-                {
-                    stacks.Add(stack);
-                }
-                else
-                {
-                    float q = (float)stack.StackSize * mul;
-                    float frac = q - (float)((int)q);
-                    stack.StackSize = (int)q + ((this.Api.World.Rand.NextDouble() > (double)frac) ? 1 : 0);
-                    if (stack.StackSize > 0)
-                    {
-                        stacks.Add(stack);
-                    }
-                }
-            }
-            this.MarkDirty(true, null);
-            return stacks.ToArray();
-        }
-
-        protected float GetNearbyWaterDistance(out CANBlockEntityFarmland.EnumWaterSearchResult result, float hoursPassed)
-        {
-            float waterDistance = 99f;
-            this.farmlandIsAtChunkEdge = false;
-            bool saltWater = false;
-            this.Api.World.BlockAccessor.SearchFluidBlocks(new BlockPos(this.Pos.X - 4, this.Pos.Y, this.Pos.Z - 4), new BlockPos(this.Pos.X + 4, this.Pos.Y, this.Pos.Z + 4), delegate (Block block, BlockPos pos)
-            {
-                if (block.LiquidCode == "water")
-                {
-                    waterDistance = Math.Min(waterDistance, (float)Math.Max(Math.Abs(pos.X - this.Pos.X), Math.Abs(pos.Z - this.Pos.Z)));
-                }
-                if (block.LiquidCode == "saltwater")
-                {
-                    saltWater = true;
-                }
-                return true;
-            }, delegate (int cx, int cy, int cz)
-            {
-                this.farmlandIsAtChunkEdge = true;
-            });
-            if (saltWater)
-            {
-                this.damageAccum[4] += hoursPassed;
-            }
-            result = CANBlockEntityFarmland.EnumWaterSearchResult.Deferred;
-            if (this.farmlandIsAtChunkEdge)
-            {
-                return 99f;
-            }
-            this.lastWaterSearchedTotalHours = this.Api.World.Calendar.TotalHours;
-            if (waterDistance < 4f)
-            {
-                result = CANBlockEntityFarmland.EnumWaterSearchResult.Found;
-                return waterDistance;
-            }
-            result = CANBlockEntityFarmland.EnumWaterSearchResult.NotFound;
-            return 99f;
-        }
-
-        private bool tryUpdateMoistureLevel(double totalDays, bool searchNearbyWater)
-        {
-            float dist = 99f;
-            if (searchNearbyWater)
-            {
-                CANBlockEntityFarmland.EnumWaterSearchResult res;
-                dist = this.GetNearbyWaterDistance(out res, 0f);
-                if (res == CANBlockEntityFarmland.EnumWaterSearchResult.Deferred)
-                {
-                    return false;
-                }
-                if (res != CANBlockEntityFarmland.EnumWaterSearchResult.Found)
-                {
-                    dist = 99f;
-                }
-                this.lastWaterDistance = dist;
-            }
-            if (this.updateMoistureLevel(totalDays, dist))
-            {
-                this.UpdateFarmlandBlock();
-            }
-            return true;
-        }
-
-        private bool updateMoistureLevel(double totalDays, float waterDistance)
-        {
-            bool skyExposed = this.Api.World.BlockAccessor.GetRainMapHeightAt(this.Pos.X, this.Pos.Z) <= ((this.GetCrop() == null) ? this.Pos.Y : (this.Pos.Y + 1));
-            return this.updateMoistureLevel(totalDays, waterDistance, skyExposed, null);
-        }
-
-        private bool updateMoistureLevel(double totalDays, float waterDistance, bool skyExposed, ClimateCondition baseClimate = null)
-        {
-            this.tmpPos.Set((double)this.Pos.X + 0.5, (double)this.Pos.Y + 0.5, (double)this.Pos.Z + 0.5);
-            double hoursPassed = Math.Min((totalDays - this.lastMoistureLevelUpdateTotalDays) * (double)this.Api.World.Calendar.HoursPerDay, 48.0);
-            if (hoursPassed < 0.029999999329447746)
-            {
-                this.moistureLevel = Math.Max(this.moistureLevel, GameMath.Clamp(1f - waterDistance / 4f, 0f, 1f));
-                return false;
-            }
-            this.moistureLevel = Math.Max(0f, this.moistureLevel - (float)hoursPassed / 48f);
-            this.moistureLevel = Math.Max(this.moistureLevel, GameMath.Clamp(1f - waterDistance / 4f, 0f, 1f));
-            if (skyExposed)
-            {
-                if (baseClimate == null && hoursPassed > 0.0)
-                {
-                    baseClimate = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, EnumGetClimateMode.WorldGenValues, totalDays - hoursPassed * (double)this.Api.World.Calendar.HoursPerDay / 2.0);
-                }
-                while (hoursPassed > 0.0)
-                {
-                    double rainLevel = (double)this.blockFarmland.wsys.GetPrecipitation(this.Pos, totalDays - hoursPassed * (double)this.Api.World.Calendar.HoursPerDay, baseClimate);
-                    this.moistureLevel = GameMath.Clamp(this.moistureLevel + (float)rainLevel / 3f, 0f, 1f);
-                    hoursPassed -= 1.0;
-                }
-            }
-            this.lastMoistureLevelUpdateTotalDays = totalDays;
-            return true;
-        }
-
-        private void Update(float dt)
-        {
-            if (!(this.Api as ICoreServerAPI).World.IsFullyLoadedChunk(this.Pos))
-            {
-                return;
-            }
-            //var c = AgriPlantRequirmentChecker.CheckAgriPlantRequirements(this);
-            double hoursNextStage = this.GetHoursForNextStage();
-            bool nearbyWaterTested = false;
-            double nowTotalHours = this.Api.World.Calendar.TotalHours;
-            double hourIntervall = 3.0 + CANBlockEntityFarmland.rand.NextDouble();
-            Block cropBlock = this.GetCrop();
-            bool hasCrop = cropBlock != null;
-
-            //LIGHT
-            bool skyExposed = this.Api.World.BlockAccessor.GetRainMapHeightAt(this.Pos.X, this.Pos.Z) <= (hasCrop ? (this.Pos.Y + 1) : this.Pos.Y);
-            if (nowTotalHours - this.totalHoursLastUpdate < hourIntervall)
-            {
-                if (this.updateMoistureLevel(this.Api.World.Calendar.TotalDays, this.lastWaterDistance, skyExposed, null))
-                {
-                    this.UpdateFarmlandBlock();
-                }
-                return;
-            }
-            int lightpenalty = 0;
-            //set penalty if config value is set and plant doesn't have override for undergroud
-            if (!this.allowundergroundfarming && (!this.hasPlant() || !this.agriPlant.AllowUnderGround))
-            {
-                lightpenalty = Math.Max(0, this.Api.World.SeaLevel - this.Pos.Y);
-            }
-
-            int sunlight = this.Api.World.BlockAccessor.GetLightLevel(this.upPos, EnumLightLevelType.MaxLight);
-            double lightGrowthSpeedFactor = 0;
-            if ((!this.hasPlant() || !this.agriPlant.AllowUnderGround))
-            {
-                lightGrowthSpeedFactor = (double)GameMath.Clamp(1f - (float)(this.blockFarmland.DelayGrowthBelowSunLight - sunlight - lightpenalty) * this.blockFarmland.LossPerLevel, 0f, 1f);
-            }
-            else
-            {
-                lightGrowthSpeedFactor = 1f;
-            }
-            
-            
-            
-            Block upblock = this.Api.World.BlockAccessor.GetBlock(this.upPos);
-            Block deadCropBlock = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
-            double lightHoursPenalty = hoursNextStage / lightGrowthSpeedFactor - hoursNextStage;
-            double totalHoursNextGrowthState = this.totalHoursForNextStage + lightHoursPenalty;
-            EnumSoilNutrient? currentlyConsumedNutrient = null;
-            if (upblock.CropProps != null)
-            {
-                currentlyConsumedNutrient = new EnumSoilNutrient?(upblock.CropProps.RequiredNutrient);
-            }
-            bool growTallGrass = false;
-            float[] npkRegain = new float[3];
-            float waterDistance = 99f;
-            this.totalHoursLastUpdate = Math.Max(this.totalHoursLastUpdate, nowTotalHours - (double)((float)this.Api.World.Calendar.DaysPerYear * this.Api.World.Calendar.HoursPerDay));
-            bool hasRipeCrop = this.HasRipeCrop();
-            if (!skyExposed)
-            {
-                RoomRegistry roomreg = this.blockFarmland.roomreg;
-                Room room = (roomreg != null) ? roomreg.GetRoomForPosition(this.upPos) : null;
-                this.roomness = ((room != null && room.SkylightCount > room.NonSkylightCount && room.ExitCount == 0) ? 1 : 0);
-            }
-            else
-            {
-                this.roomness = 0;
-            }
-            ClimateCondition baseClimate = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, EnumGetClimateMode.WorldGenValues, 0.0);
-            if (baseClimate == null)
-            {
-                return;
-            }
-            float baseTemperature = baseClimate.Temperature;
-            while (nowTotalHours - this.totalHoursLastUpdate > hourIntervall)
-            {
-                if (!nearbyWaterTested)
-                {
-                    CANBlockEntityFarmland.EnumWaterSearchResult res;
-                    waterDistance = this.GetNearbyWaterDistance(out res, (float)hourIntervall);
-                    if (res == CANBlockEntityFarmland.EnumWaterSearchResult.Deferred)
-                    {
-                        return;
-                    }
-                    if (res == CANBlockEntityFarmland.EnumWaterSearchResult.NotFound)
-                    {
-                        waterDistance = 99f;
-                    }
-                    nearbyWaterTested = true;
-                    this.lastWaterDistance = waterDistance;
-                }
-                this.updateMoistureLevel(this.totalHoursLastUpdate / (double)this.Api.World.Calendar.HoursPerDay, waterDistance, skyExposed, baseClimate);
-                this.totalHoursLastUpdate += hourIntervall;
-                hourIntervall = 3.0 + CANBlockEntityFarmland.rand.NextDouble();
-                baseClimate.Temperature = baseTemperature;
-                ClimateCondition conds = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, baseClimate, EnumGetClimateMode.ForSuppliedDate_TemperatureOnly, this.totalHoursLastUpdate / (double)this.Api.World.Calendar.HoursPerDay);
-                
-                
-                //TEMPERATURE
-                if (this.roomness > 0)
-                {
-                    conds.Temperature += 5f;
-                }
-                if (!hasCrop)
-                {
-                    this.ripeCropColdDamaged = false;
-                    this.unripeCropColdDamaged = false;
-                    this.unripeHeatDamaged = false;
-                    for (int i = 0; i < this.damageAccum.Length; i++)
-                    {
-                        this.damageAccum[i] = 0f;
-                    }
-                }
-                else
-                {
-                    float tempBuff = 0;
-                    if (Genome != null)
-                    {
-                        tempBuff = cancrops.config.coldResistanceByStat * Genome.Resistance.Dominant.Value;
-                    }
-                    if (((cropBlock != null) ? cropBlock.CropProps : null) != null && conds.Temperature < (cropBlock.CropProps.ColdDamageBelow - tempBuff))
-                    {
-                        if (hasRipeCrop)
-                        {
-                            this.ripeCropColdDamaged = true;
-                        }
-                        else
-                        {
-                            this.unripeCropColdDamaged = true;
-                            this.damageAccum[2] += (float)hourIntervall;
-                        }
-                    }
-                    else
-                    {
-                        this.damageAccum[2] = Math.Max(0f, this.damageAccum[2] - (float)hourIntervall / 10f);
-                    }
-
-                    if (Genome != null)
-                    {
-                        tempBuff = cancrops.config.heatResistanceByStat * Genome.Resistance.Dominant.Value;
-                    }
-                    else
-                    {
-                        tempBuff = 0;
-                    }
-
-                    if (((cropBlock != null) ? cropBlock.CropProps : null) != null && conds.Temperature > (cropBlock.CropProps.HeatDamageAbove + tempBuff) && hasCrop)
-                    {
-                        this.unripeHeatDamaged = true;
-                        this.damageAccum[1] += (float)hourIntervall;
-                    }
-                    else
-                    {
-                        this.damageAccum[1] = Math.Max(0f, this.damageAccum[1] - (float)hourIntervall / 10f);
-                    }
-                    for (int j = 0; j < this.damageAccum.Length; j++)
-                    {
-                        float dmg = this.damageAccum[j];
-                        if (!this.allowcropDeath)
-                        {
-                            dmg = (this.damageAccum[j] = 0f);
-                        }
-                        if (dmg > 48f)
-                        {
-                            this.Api.World.BlockAccessor.SetBlock(deadCropBlock.Id, this.upPos);
-                            BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
-                            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(cropBlock, 1);
-                            blockEntityDeadCrop.deathReason = (EnumCropStressType)j;
-                            hasCrop = false;
-                            break;
-                        }
-                    }
-                }
-                float growthChance = GameMath.Clamp(conds.Temperature / 10f, 0f, 10f);
-                if (CANBlockEntityFarmland.rand.NextDouble() <= (double)growthChance)
-                {
-                    growTallGrass |= (CANBlockEntityFarmland.rand.NextDouble() < 0.006);
-                    bool ripe = this.HasRipeCrop();
-                    npkRegain[0] = (ripe ? 0f : this.fertilityRecoverySpeed);
-                    npkRegain[1] = (ripe ? 0f : this.fertilityRecoverySpeed);
-                    npkRegain[2] = (ripe ? 0f : this.fertilityRecoverySpeed);
-                    if (currentlyConsumedNutrient != null)
-                    {
-                        npkRegain[(int)currentlyConsumedNutrient.Value] /= 3f;
-                    }
-                    for (int k = 0; k < 3; k++)
-                    {
-                        this.nutrients[k] += Math.Max(0f, npkRegain[k] + Math.Min(0f, (float)this.originalFertility[k] - this.nutrients[k] - npkRegain[k]));
-                        if (this.slowReleaseNutrients[k] > 0f)
-                        {
-                            float release = Math.Min(0.25f, this.slowReleaseNutrients[k]);
-                            this.nutrients[k] = Math.Min(100f, this.nutrients[k] + release);
-                            this.slowReleaseNutrients[k] = Math.Max(0f, this.slowReleaseNutrients[k] - release);
-                        }
-                        else if (this.nutrients[k] > (float)this.originalFertility[k])
-                        {
-                            this.nutrients[k] = Math.Max((float)this.originalFertility[k], this.nutrients[k] - 0.05f);
-                        }
-                    }
-                    if (this.fertilizerOverlayStrength != null && this.fertilizerOverlayStrength.Count > 0)
-                    {
-                        foreach (string code in this.fertilizerOverlayStrength.Keys.ToArray<string>())
-                        {
-                            float newStr = this.fertilizerOverlayStrength[code] - this.fertilityRecoverySpeed;
-                            if (newStr < 0f)
-                            {
-                                this.fertilizerOverlayStrength.Remove(code);
-                            }
-                            else
-                            {
-                                this.fertilizerOverlayStrength[code] = newStr;
-                            }
-                        }
-                    }
-                    if ((double)this.moistureLevel >= 0.1 && totalHoursNextGrowthState <= this.totalHoursLastUpdate)
-                    {
-                        if (AgriPlantRequirmentChecker.CheckAgriPlantRequirements(this))
-                        {
-                            this.TryGrowCrop(this.totalHoursForNextStage);
-                        }
-                        this.totalHoursForNextStage += hoursNextStage;
-                        totalHoursNextGrowthState = this.totalHoursForNextStage + lightHoursPenalty;
-                        hoursNextStage = this.GetHoursForNextStage();
-                    }
-                }
-            }
-            if (growTallGrass && upblock.BlockMaterial == EnumBlockMaterial.Air)
-            {
-                double rnd = CANBlockEntityFarmland.rand.NextDouble() * (double)this.blockFarmland.TotalWeedChance;
-                int l = 0;
-                while (l < this.blockFarmland.WeedNames.Length)
-                {
-                    rnd -= (double)this.blockFarmland.WeedNames[l].Chance;
-                    if (rnd <= 0.0)
-                    {
-                        if(this.cropSticksVariant != EnumCropSticksVariant.NONE)
-                        {
-                            this.cropSticksVariant = EnumCropSticksVariant.NONE;
-                            this.MarkDirty();
-                        }
-                        Block weedsBlock = this.Api.World.GetBlock(this.blockFarmland.WeedNames[l].Code);
-                        if (weedsBlock != null)
-                        {
-                            this.Api.World.BlockAccessor.SetBlock(weedsBlock.BlockId, this.upPos);
-                            break;
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        l++;
-                    }
-                }
-            }
-            if(isCrossCrop())
-            {
-                executeCrossGrowthTick();
-            }
-            this.updateFertilizerQuad();
-            this.UpdateFarmlandBlock();
-            this.Api.World.BlockAccessor.MarkBlockEntityDirty(this.Pos);
-        }
-
-        public double GetHoursForNextStage()
-        {
-            Block block = this.GetCrop();
-            if (block == null)
-            {
-                return 99999999.0;
-            }
-            float totalDays = block.CropProps.TotalGrowthDays;
-            if (totalDays > 0f)
-            {
-                totalDays = totalDays / 12f * (float)this.Api.World.Calendar.DaysPerMonth;
-            }
-            else
-            {
-                totalDays = block.CropProps.TotalGrowthMonths * (float)this.Api.World.Calendar.DaysPerMonth;
-            }
-            if (Genome != null)
-            {
-                return (double)(this.Api.World.Calendar.HoursPerDay * totalDays 
-                    / (float)block.CropProps.GrowthStages 
-                    * (1f / this.GetGrowthRate(block.CropProps.RequiredNutrient))
-                    * (float)(0.9 + 0.2 * CANBlockEntityFarmland.rand.NextDouble())
-                    / this.growthRateMul)
-                        * (1f - (Genome.Growth.Dominant.Value * 0.05));
-            }
-            else
-            {
-                return (double)(this.Api.World.Calendar.HoursPerDay * totalDays / (float)block.CropProps.GrowthStages * (1f / this.GetGrowthRate(block.CropProps.RequiredNutrient)) * (float)(0.9 + 0.2 * CANBlockEntityFarmland.rand.NextDouble()) / this.growthRateMul);
-            }
-        }
-
-        public float GetGrowthRate(EnumSoilNutrient nutrient)
-        {
-            float moistFactor = (float)Math.Pow(Math.Max(0.01, (double)(this.moistureLevel * 100f / 70f) - 0.143), 0.35);
-            if (this.nutrients[(int)nutrient] > 75f)
-            {
-                return moistFactor * 1.1f;
-            }
-            if (this.nutrients[(int)nutrient] > 50f)
-            {
-                return moistFactor * 1f;
-            }
-            if (this.nutrients[(int)nutrient] > 35f)
-            {
-                return moistFactor * 0.9f;
-            }
-            if (this.nutrients[(int)nutrient] > 20f)
-            {
-                return moistFactor * 0.6f;
-            }
-            if (this.nutrients[(int)nutrient] > 5f)
-            {
-                return moistFactor * 0.3f;
-            }
-            return moistFactor * 0.1f;
-        }
-
-        public float GetGrowthRate()
-        {
-            Block crop = this.GetCrop();
-            BlockCropProperties cropProps = (crop != null) ? crop.CropProps : null;
-            if (cropProps != null)
-            {
-                return this.GetGrowthRate(cropProps.RequiredNutrient);
-            }
-            return 1f;
-        }
-
-        public float GetDeathChance(int nutrientIndex)
-        {
-            if (this.nutrients[nutrientIndex] <= 5f)
-            {
-                return 0.5f;
-            }
-            return 0f;
-        }
-        public bool HasAgriPlant()
-        {
-            return agriPlant != null;
-        }
-
-        public bool TryPlant(Block block, ItemStack itemStack, AgriPlant agriPlant)
-        {
-            if (this.CanPlant() && block.CropProps != null && !this.isCrossCrop())
-            {
-                //search for genome on seed (or get default one)
-                //search for agriplant of the seed and if not then return false
-                //otherwise set genome and plant
-                if(Api.Side == EnumAppSide.Server)
-                {
-                    Genome seedGenome = CommonUtils.GetSeedGenomeFromAttribute(itemStack);
-                    //AgriPlant agriPlant = cancrops.GetPlants().getPlant(itemStack.Item.Code.Domain + ":" + itemStack.Item.LastCodePart(0));
-
-                    /*if (agriPlant == null) 
-                    {
-                        return false;
-                    }*/
-                    this.Genome = seedGenome;
-                    this.agriPlant = agriPlant;
-                }
-                this.Api.World.BlockAccessor.SetBlock(block.BlockId, this.upPos);
-                this.totalHoursForNextStage = this.Api.World.Calendar.TotalHours + this.GetHoursForNextStage();
-                CropBehavior[] behaviors = block.CropProps.Behaviors;
-                for (int i = 0; i < behaviors.Length; i++)
-                {
-                    behaviors[i].OnPlanted(this.Api);
-                }
-                ReadNeighbours();
-                return true;
-            }
-            return false;
-        }
-
-        public bool CanPlant()
-        {
-            if(this.upPos == null)
-            {
-                return false;
-            }
-            Block block = this.Api.World.BlockAccessor.GetBlock(this.upPos);
-            return block == null || block.BlockMaterial == EnumBlockMaterial.Air;
-        }
-
-        public bool HasUnripeCrop()
-        {
-            Block block = this.GetCrop();
-            return block != null && this.GetCropStage(block) < block.CropProps.GrowthStages;
-        }
-
-        public bool HasRipeCrop()
-        {
-            Block block = this.GetCrop();
-            return block != null && this.GetCropStage(block) >= block.CropProps.GrowthStages;
-        }
-
-        public bool TryGrowCrop(double currentTotalHours)
-        {
-            Block block = this.GetCrop();
-            if (block == null)
-            {
-                return false;
-            }
-            int currentGrowthStage = this.GetCropStage(block);
-            if (currentGrowthStage >= block.CropProps.GrowthStages)
-            {
-                return false;
-            }
-            int newGrowthStage = currentGrowthStage + 1;
-            Block nextBlock = this.Api.World.GetBlock(block.CodeWithParts(newGrowthStage.ToString() ?? ""));
-            if (nextBlock == null)
-            {
-                return false;
-            }
-            if (block.CropProps.Behaviors != null)
-            {
-                EnumHandling handled = EnumHandling.PassThrough;
-                bool result = false;
-                CropBehavior[] behaviors = block.CropProps.Behaviors;
-                for (int i = 0; i < behaviors.Length; i++)
-                {
-                    result = behaviors[i].TryGrowCrop(this.Api, this, currentTotalHours, newGrowthStage, ref handled);
-                    if (handled == EnumHandling.PreventSubsequent)
-                    {
-                        return result;
-                    }
-                }
-                if (handled == EnumHandling.PreventDefault)
-                {
-                    return result;
-                }
-            }
-            if (this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) == null)
-            {
-                this.Api.World.BlockAccessor.SetBlock(nextBlock.BlockId, this.upPos);
-            }
-            else
-            {
-                this.Api.World.BlockAccessor.ExchangeBlock(nextBlock.BlockId, this.upPos);
-            }
-            this.ConsumeNutrients(block);
-            return true;
-        }
-
-        private void ConsumeNutrients(Block cropBlock)
-        {
-            float nutrientLoss = cropBlock.CropProps.NutrientConsumption / (float)cropBlock.CropProps.GrowthStages;
-            this.nutrients[(int)cropBlock.CropProps.RequiredNutrient] = Math.Max(0f, this.nutrients[(int)cropBlock.CropProps.RequiredNutrient] - nutrientLoss);
-            this.UpdateFarmlandBlock();
-        }
-        
-
-        private void UpdateFarmlandBlock()
-        {
-            int nowLevel = this.GetFertilityLevel((float)((this.originalFertility[0] + this.originalFertility[1] + this.originalFertility[2]) / 3));
-            Block farmlandBlock = this.Api.World.BlockAccessor.GetBlock(this.Pos);
-            Block nextFarmlandBlock = this.Api.World.GetBlock(farmlandBlock.CodeWithParts(new string[]
-            {
-                this.IsVisiblyMoist ? "moist" : "dry",
-                CANBlockEntityFarmland.Fertilities.GetKeyAtIndex(nowLevel)
-            }));
-            if (nextFarmlandBlock == null)
-            {
-                this.Api.World.BlockAccessor.RemoveBlockEntity(this.Pos);
-                return;
-            }
-            if (farmlandBlock.BlockId != nextFarmlandBlock.BlockId)
-            {
-                this.Api.World.BlockAccessor.ExchangeBlock(nextFarmlandBlock.BlockId, this.Pos);
-                this.Api.World.BlockAccessor.MarkBlockEntityDirty(this.Pos);
-                this.Api.World.BlockAccessor.MarkBlockDirty(this.Pos);
-            }
-        }
-
-        internal int GetFertilityLevel(float fertiltyValue)
-        {
-            int i = 0;
-            foreach (KeyValuePair<string, float> val in CANBlockEntityFarmland.Fertilities)
-            {
-                if (val.Value >= fertiltyValue)
-                {
-                    return i;
-                }
-                i++;
-            }
-            return CANBlockEntityFarmland.Fertilities.Count - 1;
-        }
-
-        internal Block GetCrop()
-        {
-            if(this.upPos == null)
-            {
-                return null;
-            }
-            Block block = this.Api.World.BlockAccessor.GetBlock(this.upPos);
-            if (block == null || block.CropProps == null)
-            {
-                return null;
-            }
-            return block;
-        }
-
-        internal int GetCropStage(Block block)
-        {
-            int stage;
-            int.TryParse(block.LastCodePart(0), out stage);
-            return stage;
-        }
-        public int GetCropStageWithout()
-        {
-            Block crop = this.GetCrop();
-            if (crop != null)
-            {
-                return this.GetCropStage(this.GetCrop());
-            }
-            return 0;
-        }
-        private void updateFertilizerQuad()
-        {
-            if (this.capi == null)
-            {
-                return;
-            }
-            AssetLocation loc = new AssetLocation();
-            if (this.fertilizerOverlayStrength == null || this.fertilizerOverlayStrength.Count == 0)
-            {
-                bool flag = this.fertilizerQuad != null;
-                this.fertilizerQuad = null;
-                if (flag)
-                {
-                    this.MarkDirty(true, null);
-                }
-                return;
-            }
-            int i = 0;
-            foreach (KeyValuePair<string, float> val in this.fertilizerOverlayStrength)
-            {
-                string intensity = "low";
-                if (val.Value > 50f)
-                {
-                    intensity = "med";
-                }
-                if (val.Value > 100f)
-                {
-                    intensity = "high";
-                }
-                if (i > 0)
-                {
-                    AssetLocation assetLocation = loc;
-                    assetLocation.Path += "++0~";
-                }
-                AssetLocation assetLocation2 = loc;
-                assetLocation2.Path = string.Concat(new string[]
-                {
-                    assetLocation2.Path,
-                    "block/soil/farmland/fertilizer/",
-                    val.Key,
-                    "-",
-                    intensity
-                });
-                i++;
-            }
-            int num;
-            TextureAtlasPosition newFertilizerTexturePos;
-            this.capi.BlockTextureAtlas.GetOrInsertTexture(loc, out num, out newFertilizerTexturePos, null, 0f);
-            if (this.fertilizerTexturePos != newFertilizerTexturePos)
-            {
-                this.fertilizerTexturePos = newFertilizerTexturePos;
-                this.genFertilizerQuad();
-                this.MarkDirty(true, null);
-            }
-        }
-
-        private void genFertilizerQuad()
-        {
-            //var c = this.capi.BlockTextureAtlas.Size;
-            Shape shape = this.capi.Assets.TryGet(new AssetLocation("game:shapes/block/farmland-fertilizer.json"), true).ToObject<Shape>(null);
-            //var f = this.AtlasSize;
-            this.capi.Tesselator.TesselateShape(new TesselationMetaData
-            {
-                TypeForLogging = "farmland fertilizer quad",
-                TexSource = this
-            }, shape, out this.fertilizerQuad);
-        }
-
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
             base.FromTreeAttributes(tree, worldForResolving);
@@ -1090,33 +332,42 @@ namespace cancrops.src.blockenities
                         KeyValuePair<string, IAttribute> val = enumerator.Current;
                         this.fertilizerOverlayStrength[val.Key] = (val.Value as FloatAttribute).value;
                     }
-                    //goto IL_316;
                 }
             }
-            //this.fertilizerOverlayStrength = null;
-            //cropSticksVariant
+            bool regenerateMesh = false;
             var tmpStick = (EnumCropSticksVariant)tree.GetInt("cropSticksVariant");
             if (cropSticksVariant != tmpStick)
             {
-                GenRightMesh();
-                cropSticksVariant = tmpStick;
+                cropSticksVariant = tmpStick;               
+                regenerateMesh = true;
             }
-        IL_316:
-            this.updateFertilizerQuad();
-            //if (this.Api.Side == EnumAppSide.Server)
-            {
-                if (tree.HasAttribute("genome"))
-                {
-                    this.Genome = Genome.FromTreeAttribute(tree.GetTreeAttribute("genome"));
-                }
 
-                if (tree.HasAttribute("plant"))
+            this.updateFertilizerQuad();
+            
+            if (tree.HasAttribute("genome"))
+            {
+                this.Genome = Genome.FromTreeAttribute(tree.GetTreeAttribute("genome"));
+            }
+
+            if (tree.HasAttribute("plant"))
+            {
+                this.agriPlant = cancrops.GetPlants()?.getPlant(tree.GetString("plant")) ?? null;
+            }
+            WeedStage newWeedStage = (WeedStage)tree.GetInt("weedStage", 0);
+            if (this.weedStage != newWeedStage)
+            {
+                regenerateMesh = true;
+                this.weedStage = newWeedStage;
+            }
+
+            if (worldForResolving.Side == EnumAppSide.Client && this.capi != null)
+            {
+                if (regenerateMesh)
                 {
-                    this.agriPlant = cancrops.GetPlants()?.getPlant(tree.GetString("plant")) ?? null;
+                    GenRightMesh();
                 }
             }
         }
-
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
@@ -1151,20 +402,17 @@ namespace cancrops.src.blockenities
                     ftree.SetFloat(val.Key, val.Value);
                 }
             }
-            tree.SetInt("cropSticksVariant", (int)cropSticksVariant);
-            //if (this.Api.Side == EnumAppSide.Server)
+            tree.SetInt("cropSticksVariant", (int)cropSticksVariant);          
+            if (Genome != null)
             {
-                if (Genome != null)
-                {
-                    tree["genome"] = this.Genome.AsTreeAttribute();
-                }
-                if (agriPlant != null)
-                {
-                    tree.SetString("plant", this.agriPlant.Domain + ":" + this.agriPlant.Id);
-                }
+                tree["genome"] = this.Genome.AsTreeAttribute();
             }
+            if (agriPlant != null)
+            {
+                tree.SetString("plant", this.agriPlant.Domain + ":" + this.agriPlant.Id);
+            }
+            tree.SetInt("weedStage", (int)this.weedStage);            
         }
-
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
             Block crop = this.GetCrop();
@@ -1290,122 +538,23 @@ namespace cancrops.src.blockenities
             }
             dsc.ToString();
         }
-
-        public void WaterFarmland(float dt, bool waterNeightbours = true)
+        public override void OnBlockRemoved()
         {
-            this.moistureLevel = Math.Min(1f, this.moistureLevel + dt / 2f);
-            if (waterNeightbours)
+            base.OnBlockRemoved();
+            if (this.Api.Side == EnumAppSide.Server)
             {
-                foreach (BlockFacing neib in BlockFacing.HORIZONTALS)
-                {
-                    BlockPos npos = this.Pos.AddCopy(neib);
-                    CANBlockEntityFarmland bef = this.Api.World.BlockAccessor.GetBlockEntity(npos) as CANBlockEntityFarmland;
-                    if (bef != null)
-                    {
-                        bef.WaterFarmland(dt / 3f, false);
-                    }
-                }
-            }
-            this.updateMoistureLevel(this.Api.World.Calendar.TotalDays, this.lastWaterDistance);
-            this.UpdateFarmlandBlock();
-        }       
-        public void ReadNeighbours()
-        {
-            neighbours.Clear();
-            foreach (var dir in BlockFacing.HORIZONTALS)
-            {
-                //var f = this.Pos.AddCopy(dir);
-                if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
-                {
-                    if (befl.hasPlant())
-                    {
-                        neighbours[dir] = befl;
-                    }
-                }
-                else
-                {
-                    neighbours.Remove(dir);
-                }
+                this.Api.ModLoader.GetModSystem<POIRegistry>(true).RemovePOI(this);
             }
         }
-        public bool isCrossCrop()
+        public override void OnBlockUnloaded()
         {
-            return this.cropSticksVariant == EnumCropSticksVariant.DOUBLE;
-        }
-        public EnumCropSticksVariant GetCropSticksVariant()
-        {
-            return cropSticksVariant;
-        }
-        public bool TryPlaceSelectionSticks()
-        {
-            if(Genome != null)
+            base.OnBlockUnloaded();
+            ICoreAPI api = this.Api;
+            if (api != null && api.Side == EnumAppSide.Server)
             {
-                return false;
-            }
-            if(cropSticksVariant < EnumCropSticksVariant.DOUBLE)
-            {
-                //var f = cropSticksVariant+1;
-                cropSticksVariant = (EnumCropSticksVariant)(cropSticksVariant+1);
-                this.MarkDirty(true);
-                if (cropSticksVariant == EnumCropSticksVariant.DOUBLE)
-                {
-                    ReadNeighbours();
-                }
-                return true;
-            }
-            return false;
-        }
-        protected void executeCrossGrowthTick()
-        {
-            // Do not do mutation growth ticks if the plant has weeds
-            //if (!this.hasWeeds())
-            {
-                if (cancrops.GetAgriMutationHandler().handleCrossBreedTick(this, this.neighbours.Values, rand))
-                {
-                    //MinecraftForge.EVENT_BUS.post(new AgriCropEvent.Grow.Cross.Post(this));
-                }
+                this.Api.ModLoader.GetModSystem<POIRegistry>(true).RemovePOI(this);
             }
         }
-        private Dictionary<BlockFacing, CANBlockEntityFarmland> neighbours =new Dictionary<BlockFacing, CANBlockEntityFarmland>();
-        private EnumCropSticksVariant cropSticksVariant = EnumCropSticksVariant.NONE;
-
-        public bool IsSuitableFor(Entity entity, CreatureDiet diet)
-        {
-            if (diet == null)
-            {
-                return false;
-            }
-            Block crop = this.GetCrop();
-            if (crop == null)
-            {
-                return false;
-            }
-            return diet.Matches(EnumFoodCategory.NoNutrition, this.creatureFoodTags);
-        }
-
-
-        public float ConsumeOnePortion(Entity entity)
-        {
-            Block crop = this.GetCrop();
-            if (crop == null)
-            {
-                return 0f;
-            }
-            Block block = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
-            this.Api.World.BlockAccessor.SetBlock(block.Id, this.upPos);
-            BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
-            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(crop, 1);
-            blockEntityDeadCrop.deathReason = EnumCropStressType.Eaten;
-            return 1f;
-        }
-        public TextureAtlasPosition this[string textureCode]
-        {
-            get
-            {
-                return this.fertilizerTexturePos;
-            }
-        }
-
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
         {
             mesher.AddMeshData(this.fertilizerQuad, 1);
@@ -1416,10 +565,27 @@ namespace cancrops.src.blockenities
             }
             return false;
         }
+
+        /**************************************************************************
+         **************************************************************************
+         *******************************RENDER*************************************
+         **************************************************************************
+         **************************************************************************/
+        private void genFertilizerQuad()
+        {
+            //var c = this.capi.BlockTextureAtlas.Size;
+            Shape shape = this.capi.Assets.TryGet(new AssetLocation("game:shapes/block/farmland-fertilizer.json"), true).ToObject<Shape>(null);
+            //var f = this.AtlasSize;
+            this.capi.Tesselator.TesselateShape(new TesselationMetaData
+            {
+                TypeForLogging = "farmland fertilizer quad",
+                TexSource = this
+            }, shape, out this.fertilizerQuad);
+        }       
         internal MeshData GenRightMesh()
         {
-            MeshData fuelmesh = null;
-            /*if (weedStage != WeedStage.NONE)
+            MeshData fullMesh = null;
+            if (weedStage != WeedStage.NONE)
             {
                 Shape shape = null;
 
@@ -1438,66 +604,126 @@ namespace cancrops.src.blockenities
 
                 if (shape != null)
                 {
-                    (Api as ICoreClientAPI).Tesselator.TesselateShape(this.Block, shape, out fuelmesh);
+                    (Api as ICoreClientAPI).Tesselator.TesselateShape(this.Block, shape, out MeshData weedMesh);
+                    fullMesh = weedMesh;
                 }
-            }*/
+                
+            }
             if (cropSticksVariant > EnumCropSticksVariant.NONE)
             {
                 Shape shape = null;
 
-                MeshData tmp = null;
                 if (cropSticksVariant == EnumCropSticksVariant.SINGLE)
                 {
                     shape = Api.Assets.TryGet("cancrops:shapes/selection_sticks.json").ToObject<Shape>();
                 }
-                else if(cropSticksVariant == EnumCropSticksVariant.DOUBLE)
+                else if (cropSticksVariant == EnumCropSticksVariant.DOUBLE)
                 {
                     shape = Api.Assets.TryGet("cancrops:shapes/selection_sticks_2.json").ToObject<Shape>();
                 }
-                
+
                 if (shape != null)
                 {
-                    (Api as ICoreClientAPI).Tesselator.TesselateShape(this.Block, shape, out fuelmesh);
+                    (Api as ICoreClientAPI).Tesselator.TesselateShape(this.Block, shape, out MeshData stickMesh);
+                    if(fullMesh != null)
+                    {
+                        fullMesh.AddMeshData(stickMesh);
+                    }
+                    else
+                    {
+                        fullMesh = stickMesh;
+                    }
                 }
-                /*if (fuelmesh != null)
-                {
-                    fuelmesh.AddMeshData(tmp);
-                }
-                else
-                {
-                    fuelmesh = tmp;
-                }*/
+                
             }
-            if (fuelmesh != null)
-                return fuelmesh.Translate(new Vintagestory.API.MathTools.Vec3f(0, 0.9f, 0));
-            return fuelmesh;
+            if (fullMesh != null)
+            {
+                return fullMesh.Translate(new Vintagestory.API.MathTools.Vec3f(0, 0.9f, 0));
+            }
+            return fullMesh;
         }
 
-        public override void OnBlockRemoved()
+
+        /**************************************************************************
+         **************************************************************************
+         *******************************CHECKS*************************************
+         **************************************************************************
+         **************************************************************************/
+        public bool HasAgriPlant()
         {
-            base.OnBlockRemoved();
-            if (this.Api.Side == EnumAppSide.Server)
+            return agriPlant != null;
+        }
+        public bool CanPlant()
+        {
+            if (this.upPos == null)
             {
-                this.Api.ModLoader.GetModSystem<POIRegistry>(true).RemovePOI(this);
+                return false;
             }
+            Block block = this.Api.World.BlockAccessor.GetBlock(this.upPos);
+            return block == null || block.BlockMaterial == EnumBlockMaterial.Air;
+        }
+        public bool HasUnripeCrop()
+        {
+            Block block = this.GetCrop();
+            return block != null && this.GetCropStage(block) < block.CropProps.GrowthStages;
+        }
+        public bool HasRipeCrop()
+        {
+            Block block = this.GetCrop();
+            return block != null && this.GetCropStage(block) >= block.CropProps.GrowthStages;
+        }
+        public bool isCrossCrop()
+        {
+            return this.cropSticksVariant == EnumCropSticksVariant.DOUBLE;
+        }
+        public bool IsSuitableFor(Entity entity, CreatureDiet diet)
+        {
+            if (diet == null)
+            {
+                return false;
+            }
+            Block crop = this.GetCrop();
+            if (crop == null)
+            {
+                return false;
+            }
+            return diet.Matches(EnumFoodCategory.NoNutrition, this.creatureFoodTags);
+        }
+        public bool hasPlant()
+        {
+            return this.agriPlant != null;
         }
 
-        public override void OnBlockUnloaded()
+
+        /**************************************************************************
+         **************************************************************************
+         **************************GENOME RELATED**********************************
+         **************************************************************************
+         **************************************************************************/
+        public bool TryPlant(Block block, ItemStack itemStack, AgriPlant agriPlant)
         {
-            base.OnBlockUnloaded();
-            ICoreAPI api = this.Api;
-            if (api != null && api.Side == EnumAppSide.Server)
+            if (this.CanPlant() && block.CropProps != null && !this.isCrossCrop())
             {
-                this.Api.ModLoader.GetModSystem<POIRegistry>(true).RemovePOI(this);
+                //search for genome on seed (or get default one)
+                //search for agriplant of the seed and if not then return false
+                //otherwise set genome and plant
+                if (Api.Side == EnumAppSide.Server)
+                {
+                    Genome seedGenome = CommonUtils.GetSeedGenomeFromAttribute(itemStack);
+                    this.Genome = seedGenome;
+                    this.agriPlant = agriPlant;
+                }
+                this.Api.World.BlockAccessor.SetBlock(block.BlockId, this.upPos);
+                this.totalHoursForNextStage = this.Api.World.Calendar.TotalHours + this.GetHoursForNextStage();
+                CropBehavior[] behaviors = block.CropProps.Behaviors;
+                for (int i = 0; i < behaviors.Length; i++)
+                {
+                    behaviors[i].OnPlanted(this.Api);
+                }
+                ReadNeighbours();
+                return true;
             }
-        }
-        public void OnNeighbourBroken(BlockFacing facing)
-        {
-            neighbours.Remove(facing);
-        }
-        public void OnNeighbouropPlaced(BlockFacing facing, CANBlockEntityFarmland be)
-        {
-            neighbours[facing] = be;
+            return false;
         }
         public bool spawnGenome(Genome genome, AgriPlant agriPlant)
         {
@@ -1508,13 +734,9 @@ namespace cancrops.src.blockenities
             }
             return false;
         }
-        public bool hasPlant()
-        {
-            return this.agriPlant != null;
-        }
         protected void setGenomeImpl(Genome genome, AgriPlant agriPlant)
         {
-            
+
             Block block = this.Api.World.GetBlock(new AssetLocation(agriPlant.Domain + ":crop-" + agriPlant.Id + "-1"));
 
             if (block == null)
@@ -1534,201 +756,1115 @@ namespace cancrops.src.blockenities
             this.cropSticksVariant = EnumCropSticksVariant.NONE;
             this.MarkDirty(true);
         }
-
-        //ATTRIBUTES, GETTERS
-
-        MeshData currentRightMesh;
-
-        public Genome Genome;
-
-        public AgriPlant agriPlant;
-
-        protected static Random rand = new Random();
-
-        public static OrderedDictionary<string, float> Fertilities = new OrderedDictionary<string, float>
+        protected void executeCrossGrowthTick()
         {
+            // Do not do mutation growth ticks if the plant has weeds
+            //if (!this.hasWeeds())
             {
-                "verylow",
-                5f
-            },
-            {
-                "low",
-                25f
-            },
-            {
-                "medium",
-                50f
-            },
-            {
-                "compost",
-                65f
-            },
-            {
-                "high",
-                80f
+                if (cancrops.GetAgriMutationHandler().handleCrossBreedTick(this, this.neighbours.Values, rand))
+                {
+                    //MinecraftForge.EVENT_BUS.post(new AgriCropEvent.Grow.Cross.Post(this));
+                }
             }
-        };
-        
-        protected HashSet<string> PermaBoosts = new HashSet<string>();
-
-        protected double totalHoursWaterRetention = 24.5;
-
-        protected BlockPos upPos;
-
-        protected double totalHoursForNextStage;
-
-        protected double totalHoursLastUpdate;
-
-        protected float[] nutrients = new float[3];
-
-        protected float[] slowReleaseNutrients = new float[3];
-
-        protected Dictionary<string, float> fertilizerOverlayStrength;
-
-        protected float moistureLevel;
-
-        protected double lastWaterSearchedTotalHours;
-
-        protected TreeAttribute cropAttrs = new TreeAttribute();
-
-        public int[] originalFertility = new int[3];
-
-        protected bool unripeCropColdDamaged;
-
-        protected bool unripeHeatDamaged;
-
-        protected bool ripeCropColdDamaged;
-
-        protected bool saltExposed;
-
-        protected float[] damageAccum = new float[Enum.GetValues(typeof(EnumCropStressType)).Length];
-
-        private CANBlockFarmland blockFarmland;
-
-        protected Vec3d tmpPos = new Vec3d();
-
-        protected float lastWaterDistance = 99f;
-
-        protected double lastMoistureLevelUpdateTotalDays;
-
-        public int roomness;
-
-        protected bool allowundergroundfarming;
-
-        protected bool allowcropDeath;
-
-        protected float fertilityRecoverySpeed = 0.25f;
-
-        protected float growthRateMul = 1f;
-
-        protected MeshData fertilizerQuad;
-
-        protected TextureAtlasPosition fertilizerTexturePos;
-
-        private ICoreClientAPI capi;
-
-        private bool farmlandIsAtChunkEdge;
-        public Vec3d Position
+        }
+        public EnumCropSticksVariant GetCropSticksVariant()
         {
-            get
+            return cropSticksVariant;
+        }
+        public bool TryPlaceSelectionSticks()
+        {
+            if (Genome != null)
             {
-                return this.Pos.ToVec3d().Add(0.5, 1.0, 0.5);
+                return false;
+            }
+            if (cropSticksVariant < EnumCropSticksVariant.DOUBLE)
+            {
+                //var f = cropSticksVariant+1;
+                cropSticksVariant = (EnumCropSticksVariant)(cropSticksVariant + 1);
+                this.MarkDirty(true);
+                if (cropSticksVariant == EnumCropSticksVariant.DOUBLE)
+                {
+                    ReadNeighbours();
+                }
+                return true;
+            }
+            return false;
+        }
+
+
+        /**************************************************************************
+         **************************************************************************
+         ****************************UPDATES***************************************
+         **************************************************************************
+         **************************************************************************/
+        private bool tryUpdateMoistureLevel(double totalDays, bool searchNearbyWater)
+        {
+            float dist = 99f;
+            if (searchNearbyWater)
+            {
+                CANBlockEntityFarmland.EnumWaterSearchResult res;
+                dist = this.GetNearbyWaterDistance(out res, 0f);
+                if (res == CANBlockEntityFarmland.EnumWaterSearchResult.Deferred)
+                {
+                    return false;
+                }
+                if (res != CANBlockEntityFarmland.EnumWaterSearchResult.Found)
+                {
+                    dist = 99f;
+                }
+                this.lastWaterDistance = dist;
+            }
+            if (this.updateMoistureLevel(totalDays, dist))
+            {
+                this.UpdateFarmlandBlock();
+            }
+            return true;
+        }
+        private bool updateMoistureLevel(double totalDays, float waterDistance)
+        {
+            bool skyExposed = this.Api.World.BlockAccessor.GetRainMapHeightAt(this.Pos.X, this.Pos.Z) <= ((this.GetCrop() == null) ? this.Pos.Y : (this.Pos.Y + 1));
+            return this.updateMoistureLevel(totalDays, waterDistance, skyExposed, null);
+        }
+        private bool updateMoistureLevel(double totalDays, float waterDistance, bool skyExposed, ClimateCondition baseClimate = null)
+        {
+            this.tmpPos.Set((double)this.Pos.X + 0.5, (double)this.Pos.Y + 0.5, (double)this.Pos.Z + 0.5);
+            double hoursPassed = Math.Min((totalDays - this.lastMoistureLevelUpdateTotalDays) * (double)this.Api.World.Calendar.HoursPerDay, 48.0);
+            if (hoursPassed < 0.029999999329447746)
+            {
+                this.moistureLevel = Math.Max(this.moistureLevel, GameMath.Clamp(1f - waterDistance / 4f, 0f, 1f));
+                return false;
+            }
+            this.moistureLevel = Math.Max(0f, this.moistureLevel - (float)hoursPassed / 48f);
+            this.moistureLevel = Math.Max(this.moistureLevel, GameMath.Clamp(1f - waterDistance / 4f, 0f, 1f));
+            if (skyExposed)
+            {
+                if (baseClimate == null && hoursPassed > 0.0)
+                {
+                    baseClimate = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, EnumGetClimateMode.WorldGenValues, totalDays - hoursPassed * (double)this.Api.World.Calendar.HoursPerDay / 2.0);
+                }
+                while (hoursPassed > 0.0)
+                {
+                    double rainLevel = (double)this.blockFarmland.wsys.GetPrecipitation(this.Pos, totalDays - hoursPassed * (double)this.Api.World.Calendar.HoursPerDay, baseClimate);
+                    this.moistureLevel = GameMath.Clamp(this.moistureLevel + (float)rainLevel / 3f, 0f, 1f);
+                    hoursPassed -= 1.0;
+                }
+            }
+            this.lastMoistureLevelUpdateTotalDays = totalDays;
+            return true;
+        }
+        private void Update(float dt)
+        {
+            if (!(this.Api as ICoreServerAPI).World.IsFullyLoadedChunk(this.Pos))
+            {
+                return;
+            }
+
+            double hoursNextStage = this.GetHoursForNextStage();
+            bool nearbyWaterTested = false;
+            double nowTotalHours = this.Api.World.Calendar.TotalHours;
+            double hourIntervall = 3.0 + rand.NextDouble();
+            Block cropBlock = this.GetCrop();
+            bool hasCrop = cropBlock != null;
+
+            //LIGHT
+            bool skyExposed = this.Api.World.BlockAccessor.GetRainMapHeightAt(this.Pos.X, this.Pos.Z) <= (hasCrop ? (this.Pos.Y + 1) : this.Pos.Y);
+            if (nowTotalHours - this.totalHoursLastUpdate < hourIntervall)
+            {
+                if (this.updateMoistureLevel(this.Api.World.Calendar.TotalDays, this.lastWaterDistance, skyExposed, null))
+                {
+                    this.UpdateFarmlandBlock();
+                }
+                return;
+            }
+            int lightpenalty = 0;
+            //set penalty if config value is set and plant doesn't have override for undergroud
+            if (!this.allowundergroundfarming && (!this.hasPlant() || !this.agriPlant.AllowUnderGround))
+            {
+                lightpenalty = Math.Max(0, this.Api.World.SeaLevel - this.Pos.Y);
+            }
+
+            int sunlight = this.Api.World.BlockAccessor.GetLightLevel(this.upPos, EnumLightLevelType.MaxLight);
+            double lightGrowthSpeedFactor = 0;
+            if ((!this.hasPlant() || !this.agriPlant.AllowUnderGround))
+            {
+                lightGrowthSpeedFactor = (double)GameMath.Clamp(1f - (float)(this.blockFarmland.DelayGrowthBelowSunLight - sunlight - lightpenalty) * this.blockFarmland.LossPerLevel, 0f, 1f);
+            }
+            else
+            {
+                lightGrowthSpeedFactor = 1f;
+            }
+
+
+
+            Block upblock = this.Api.World.BlockAccessor.GetBlock(this.upPos);
+            Block deadCropBlock = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
+            double lightHoursPenalty = hoursNextStage / lightGrowthSpeedFactor - hoursNextStage;
+            double totalHoursNextGrowthState = this.totalHoursForNextStage + lightHoursPenalty;
+            EnumSoilNutrient? currentlyConsumedNutrient = null;
+            if (upblock.CropProps != null)
+            {
+                currentlyConsumedNutrient = new EnumSoilNutrient?(upblock.CropProps.RequiredNutrient);
+            }
+            bool growTallGrass = false;
+            float[] npkRegain = new float[3];
+            float waterDistance = 99f;
+            this.totalHoursLastUpdate = Math.Max(this.totalHoursLastUpdate, nowTotalHours - (double)((float)this.Api.World.Calendar.DaysPerYear * this.Api.World.Calendar.HoursPerDay));
+            bool hasRipeCrop = this.HasRipeCrop();
+            if (!skyExposed)
+            {
+                RoomRegistry roomreg = this.blockFarmland.roomreg;
+                Room room = (roomreg != null) ? roomreg.GetRoomForPosition(this.upPos) : null;
+                this.roomness = ((room != null && room.SkylightCount > room.NonSkylightCount && room.ExitCount == 0) ? 1 : 0);
+            }
+            else
+            {
+                this.roomness = 0;
+            }
+            ClimateCondition baseClimate = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, EnumGetClimateMode.WorldGenValues, 0.0);
+            if (baseClimate == null)
+            {
+                return;
+            }
+            float baseTemperature = baseClimate.Temperature;
+            while (nowTotalHours - this.totalHoursLastUpdate > hourIntervall)
+            {
+                if (!nearbyWaterTested)
+                {
+                    EnumWaterSearchResult res;
+                    waterDistance = this.GetNearbyWaterDistance(out res, (float)hourIntervall);
+                    if (res == EnumWaterSearchResult.Deferred)
+                    {
+                        return;
+                    }
+                    if (res == EnumWaterSearchResult.NotFound)
+                    {
+                        waterDistance = 99f;
+                    }
+                    nearbyWaterTested = true;
+                    this.lastWaterDistance = waterDistance;
+                }
+                this.updateMoistureLevel(this.totalHoursLastUpdate / (double)this.Api.World.Calendar.HoursPerDay, waterDistance, skyExposed, baseClimate);
+                this.totalHoursLastUpdate += hourIntervall;
+                hourIntervall = 3.0 + rand.NextDouble();
+                baseClimate.Temperature = baseTemperature;
+                ClimateCondition conds = this.Api.World.BlockAccessor.GetClimateAt(this.Pos, baseClimate, EnumGetClimateMode.ForSuppliedDate_TemperatureOnly, this.totalHoursLastUpdate / (double)this.Api.World.Calendar.HoursPerDay);
+
+
+                //TEMPERATURE
+                if (this.roomness > 0)
+                {
+                    conds.Temperature += 5f;
+                }
+                if (!hasCrop)
+                {
+                    this.ripeCropColdDamaged = false;
+                    this.unripeCropColdDamaged = false;
+                    this.unripeHeatDamaged = false;
+                    for (int i = 0; i < this.damageAccum.Length; i++)
+                    {
+                        this.damageAccum[i] = 0f;
+                    }
+                    //weed should only affect farmland with selection sticks on it or crops around farmland with weed on it already
+                    if(this.cropSticksVariant != EnumCropSticksVariant.NONE)
+                    {
+                        //try to add weed or make higher stage of it on current block
+                        if (this.weedStage != WeedStage.HIGH)
+                        {
+                            double weedChance = rand.NextDouble();
+                            if (weedChance < cancrops.config.weedAppearanceChance)
+                            {
+                                this.weedStage += 1;
+                                this.MarkDirty(true);
+                            }
+                        }
+                        else
+                        {
+                            if (hasCrop)
+                            {
+                                this.Api.World.BlockAccessor.SetBlock(deadCropBlock.Id, this.upPos);
+                                BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
+                                blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(cropBlock, 1);
+                                blockEntityDeadCrop.deathReason = (EnumCropStressType)0;
+                                hasCrop = false;
+                                this.weedStage = 0;
+                                this.cropSticksVariant = 0;
+                                this.MarkDirty();
+                                break;
+                            }
+                            else
+                            {
+                                Block weedsBlock = this.Api.World.GetBlock(this.blockFarmland.WeedNames[rand.Next(0, this.blockFarmland.WeedNames.Length - 1)].Code);
+                                if (weedsBlock != null)
+                                {
+                                    this.weedStage = 0;
+                                    this.cropSticksVariant = 0;
+                                    this.Api.World.BlockAccessor.SetBlock(weedsBlock.BlockId, this.upPos);
+                                    this.MarkDirty();
+                                    break;
+                                }
+                            }
+                        }
+                        //if there is medium or high stage of weed try to propagate
+                        if(cancrops.config.weedSpreadingActivated && this.weedStage >= (WeedStage)cancrops.config.weedMinimumSpreadStage)
+                        {
+                            foreach(var neighbour in this.neighbours.Values)
+                            {
+                                //neighbour.TryPropagateWeed(this.weedStage);
+                            }
+                        }
+                    }
+
+
+                }
+                else
+                {
+                    float tempBuff = 0;
+                    if (Genome != null)
+                    {
+                        tempBuff = cancrops.config.coldResistanceByStat * Genome.Resistance.Dominant.Value;
+                    }
+                    if (((cropBlock != null) ? cropBlock.CropProps : null) != null && conds.Temperature < (cropBlock.CropProps.ColdDamageBelow - tempBuff))
+                    {
+                        if (hasRipeCrop)
+                        {
+                            this.ripeCropColdDamaged = true;
+                        }
+                        else
+                        {
+                            this.unripeCropColdDamaged = true;
+                            this.damageAccum[2] += (float)hourIntervall;
+                        }
+                    }
+                    else
+                    {
+                        this.damageAccum[2] = Math.Max(0f, this.damageAccum[2] - (float)hourIntervall / 10f);
+                    }
+
+                    if (Genome != null)
+                    {
+                        tempBuff = cancrops.config.heatResistanceByStat * Genome.Resistance.Dominant.Value;
+                    }
+                    else
+                    {
+                        tempBuff = 0;
+                    }
+
+                    if (((cropBlock != null) ? cropBlock.CropProps : null) != null && conds.Temperature > (cropBlock.CropProps.HeatDamageAbove + tempBuff) && hasCrop)
+                    {
+                        this.unripeHeatDamaged = true;
+                        this.damageAccum[1] += (float)hourIntervall;
+                    }
+                    else
+                    {
+                        this.damageAccum[1] = Math.Max(0f, this.damageAccum[1] - (float)hourIntervall / 10f);
+                    }
+                    for (int j = 0; j < this.damageAccum.Length; j++)
+                    {
+                        float dmg = this.damageAccum[j];
+                        if (!this.allowcropDeath)
+                        {
+                            dmg = (this.damageAccum[j] = 0f);
+                        }
+                        if (dmg > 48f)
+                        {
+                            this.Api.World.BlockAccessor.SetBlock(deadCropBlock.Id, this.upPos);
+                            BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
+                            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(cropBlock, 1);
+                            blockEntityDeadCrop.deathReason = (EnumCropStressType)j;
+                            this.cropSticksVariant = 0;
+                            hasCrop = false;
+                            break;
+                        }
+                    }
+                }
+                float growthChance = GameMath.Clamp(conds.Temperature / 10f, 0f, 10f);
+                if (rand.NextDouble() <= (double)growthChance)
+                {
+                    growTallGrass |= (rand.NextDouble() < 0.006);
+                    bool ripe = this.HasRipeCrop();
+                    npkRegain[0] = (ripe ? 0f : this.fertilityRecoverySpeed);
+                    npkRegain[1] = (ripe ? 0f : this.fertilityRecoverySpeed);
+                    npkRegain[2] = (ripe ? 0f : this.fertilityRecoverySpeed);
+                    if (currentlyConsumedNutrient != null)
+                    {
+                        npkRegain[(int)currentlyConsumedNutrient.Value] /= 3f;
+                    }
+                    for (int k = 0; k < 3; k++)
+                    {
+                        this.nutrients[k] += Math.Max(0f, npkRegain[k] + Math.Min(0f, (float)this.originalFertility[k] - this.nutrients[k] - npkRegain[k]));
+                        if (this.slowReleaseNutrients[k] > 0f)
+                        {
+                            float release = Math.Min(0.25f, this.slowReleaseNutrients[k]);
+                            this.nutrients[k] = Math.Min(100f, this.nutrients[k] + release);
+                            this.slowReleaseNutrients[k] = Math.Max(0f, this.slowReleaseNutrients[k] - release);
+                        }
+                        else if (this.nutrients[k] > (float)this.originalFertility[k])
+                        {
+                            this.nutrients[k] = Math.Max((float)this.originalFertility[k], this.nutrients[k] - 0.05f);
+                        }
+                    }
+                    if (this.fertilizerOverlayStrength != null && this.fertilizerOverlayStrength.Count > 0)
+                    {
+                        foreach (string code in this.fertilizerOverlayStrength.Keys.ToArray<string>())
+                        {
+                            float newStr = this.fertilizerOverlayStrength[code] - this.fertilityRecoverySpeed;
+                            if (newStr < 0f)
+                            {
+                                this.fertilizerOverlayStrength.Remove(code);
+                            }
+                            else
+                            {
+                                this.fertilizerOverlayStrength[code] = newStr;
+                            }
+                        }
+                    }
+                    if ((double)this.moistureLevel >= 0.1 && totalHoursNextGrowthState <= this.totalHoursLastUpdate)
+                    {
+                        if (AgriPlantRequirmentChecker.CheckAgriPlantRequirements(this))
+                        {
+                            this.TryGrowCrop(this.totalHoursForNextStage);
+                        }
+                        this.totalHoursForNextStage += hoursNextStage;
+                        totalHoursNextGrowthState = this.totalHoursForNextStage + lightHoursPenalty;
+                        hoursNextStage = this.GetHoursForNextStage();
+                    }
+                }
+            }
+            if (growTallGrass && upblock.BlockMaterial == EnumBlockMaterial.Air)
+            {
+                double rnd = rand.NextDouble() * (double)this.blockFarmland.TotalWeedChance;
+                int l = 0;
+                while (l < this.blockFarmland.WeedNames.Length)
+                {
+                    rnd -= (double)this.blockFarmland.WeedNames[l].Chance;
+                    if (rnd <= 0.0)
+                    {
+                        if (this.cropSticksVariant != EnumCropSticksVariant.NONE)
+                        {
+                            this.cropSticksVariant = EnumCropSticksVariant.NONE;
+                            this.MarkDirty();
+                        }
+                        Block weedsBlock = this.Api.World.GetBlock(this.blockFarmland.WeedNames[l].Code);
+                        if (weedsBlock != null)
+                        {
+                            this.Api.World.BlockAccessor.SetBlock(weedsBlock.BlockId, this.upPos);
+                            break;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        l++;
+                    }
+                }
+            }
+            if (isCrossCrop())
+            {
+                executeCrossGrowthTick();
+            }
+            this.updateFertilizerQuad();
+            this.UpdateFarmlandBlock();
+            this.Api.World.BlockAccessor.MarkBlockEntityDirty(this.Pos);
+        }
+        private void updateFertilizerQuad()
+        {
+            if (this.capi == null)
+            {
+                return;
+            }
+            AssetLocation loc = new AssetLocation();
+            if (this.fertilizerOverlayStrength == null || this.fertilizerOverlayStrength.Count == 0)
+            {
+                bool flag = this.fertilizerQuad != null;
+                this.fertilizerQuad = null;
+                if (flag)
+                {
+                    this.MarkDirty(true, null);
+                }
+                return;
+            }
+            int i = 0;
+            foreach (KeyValuePair<string, float> val in this.fertilizerOverlayStrength)
+            {
+                string intensity = "low";
+                if (val.Value > 50f)
+                {
+                    intensity = "med";
+                }
+                if (val.Value > 100f)
+                {
+                    intensity = "high";
+                }
+                if (i > 0)
+                {
+                    AssetLocation assetLocation = loc;
+                    assetLocation.Path += "++0~";
+                }
+                AssetLocation assetLocation2 = loc;
+                assetLocation2.Path = string.Concat(new string[]
+                {
+                    assetLocation2.Path,
+                    "block/soil/farmland/fertilizer/",
+                    val.Key,
+                    "-",
+                    intensity
+                });
+                i++;
+            }
+            int num;
+            TextureAtlasPosition newFertilizerTexturePos;
+            this.capi.BlockTextureAtlas.GetOrInsertTexture(loc, out num, out newFertilizerTexturePos, null, 0f);
+            if (this.fertilizerTexturePos != newFertilizerTexturePos)
+            {
+                this.fertilizerTexturePos = newFertilizerTexturePos;
+                this.genFertilizerQuad();
+                this.MarkDirty(true, null);
+            }
+        }
+        public void ReadNeighbours()
+        {
+            neighbours.Clear();
+            foreach (var dir in BlockFacing.HORIZONTALS)
+            {
+                //var f = this.Pos.AddCopy(dir);
+                if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
+                {
+                    if (befl.hasPlant())
+                    {
+                        neighbours[dir] = befl;
+                    }
+                }
+                else
+                {
+                    neighbours.Remove(dir);
+                }
+            }
+        }
+        public void OnNeighbourBroken(BlockFacing facing)
+        {
+            neighbours.Remove(facing);
+        }
+        public void OnNeighbouropPlaced(BlockFacing facing, CANBlockEntityFarmland be)
+        {
+            neighbours[facing] = be;
+        }
+        private void UpdateFarmlandBlock()
+        {
+            int nowLevel = this.GetFertilityLevel((float)((this.originalFertility[0] + this.originalFertility[1] + this.originalFertility[2]) / 3));
+            Block farmlandBlock = this.Api.World.BlockAccessor.GetBlock(this.Pos);
+            Block nextFarmlandBlock = this.Api.World.GetBlock(farmlandBlock.CodeWithParts(new string[]
+            {
+                this.IsVisiblyMoist ? "moist" : "dry",
+                CANBlockEntityFarmland.Fertilities.GetKeyAtIndex(nowLevel)
+            }));
+            if (nextFarmlandBlock == null)
+            {
+                this.Api.World.BlockAccessor.RemoveBlockEntity(this.Pos);
+                return;
+            }
+            if (farmlandBlock.BlockId != nextFarmlandBlock.BlockId)
+            {
+                this.Api.World.BlockAccessor.ExchangeBlock(nextFarmlandBlock.BlockId, this.Pos);
+                this.Api.World.BlockAccessor.MarkBlockEntityDirty(this.Pos);
+                this.Api.World.BlockAccessor.MarkBlockDirty(this.Pos);
+            }
+        }
+        public void OnHoeUsed()
+        {
+            this.weedStage = WeedStage.NONE;
+            if(this.cropSticksVariant != EnumCropSticksVariant.NONE)
+            {
+                ItemStack sticksToDrop = new ItemStack(this.Api.World.GetItem(new AssetLocation("cancrops:selectionsticksitem")), (int)this.cropSticksVariant);
+                this.Api.World.SpawnItemEntity(sticksToDrop, new Vec3d(this.Pos.X + 0.5, this.Pos.Y + 0.5, this.Pos.Z + 0.5));
+                this.cropSticksVariant = EnumCropSticksVariant.NONE;
+            }
+
+            this.MarkDirty(true);
+        }
+        public void TryPropagateWeed(WeedStage weedStage)
+        {
+            if (this.weedStage == WeedStage.HIGH)
+            {
+                return;
+            }
+            int resistance = 0;
+            if(this.Genome != null)
+            {
+                resistance = this.Genome.Resistance.Dominant.Value;
+            }
+            cancrops.config.weedSpreadChancePerStage.TryGetValue((int)weedStage, out double weedChance);
+            if (cancrops.config.weedResistanceByStat * resistance < weedChance + rand.Next(0, 10) / 100)
+            {            
+                this.weedStage += 1;
+                this.MarkDirty();
+            }
+        }
+        public void OnCultivating(ItemSlot slot, EntityAgent byEntity)
+        {
+            if (this.weedStage > WeedStage.NONE)
+            {
+                slot.Itemstack.Collectible.DamageItem(byEntity.World, byEntity, (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlot, 1);
+                this.weedStage = 0;
+                this.MarkDirty(true);
             }
         }
 
-        public string Type
+        /**************************************************************************
+         **************************************************************************
+         ****************************DROPS*****************************************
+         **************************************************************************
+         **************************************************************************/
+        public List<ItemStack> RemoveDefaultSeeds(ItemStack[] drops)
         {
-            get
+
+            List<ItemStack> li = new List<ItemStack>();
+            if (drops == null)
             {
-                return "food";
+                return li;
             }
+            foreach (var it in drops)
+            {
+                if (!(it.Item is ItemPlantableSeed))
+                {
+                    li.Add(it);
+                }
+            }
+            return li;
+        }
+        private void ApplyStrengthBuff(List<ItemStack> drops)
+        {
+            foreach (var it in drops)
+            {
+                float[] freshHours;
+                float[] transitionHours;
+                float[] transitionedHours;
+                TransitionableProperties[] propsm = it.Collectible.GetTransitionableProperties(Api.World, it, null);
+                ITreeAttribute attr = new TreeAttribute();
+                if (propsm != null)
+                    if (!it.Attributes.HasAttribute("createdTotalHours"))
+                    {
+                        attr.SetDouble("createdTotalHours", this.Api.World.Calendar.TotalHours);
+                        attr.SetDouble("lastUpdatedTotalHours", Api.World.Calendar.TotalHours);
+                        freshHours = new float[propsm.Length];
+                        transitionHours = new float[propsm.Length];
+                        transitionedHours = new float[propsm.Length];
+                        for (int i = 0; i < propsm.Length; i++)
+                        {
+                            transitionedHours[i] = 0f;
+                            freshHours[i] = propsm[i].FreshHours.nextFloat(1f, this.Api.World.Rand) * (1 + cancrops.config.strengthFreshHoursPercentBonus);
+                            transitionHours[i] = propsm[i].TransitionHours.nextFloat(1f, this.Api.World.Rand);
+                        }
+                        attr["freshHours"] = new FloatArrayAttribute(freshHours);
+                        attr["transitionHours"] = new FloatArrayAttribute(transitionHours);
+                        attr["transitionedHours"] = new FloatArrayAttribute(transitionedHours);
+                        it.Attributes["transitionstate"] = attr;
+                    }
+            }
+        }
+        public ItemStack[] GetDrops(ItemStack[] drops, IPlayer byPlayer)
+        {
+            if (this.upPos == null)
+            {
+                return drops;
+            }
+
+            List<ItemStack> newDrops = RemoveDefaultSeeds(drops);
+            BlockEntityDeadCrop beDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
+
+            if (agriPlant == null)
+            {
+                return null;
+            }
+            if (rand.NextDouble() < (agriPlant.SeedDropChance + agriPlant.SeedDropBonus /** GetCropStage(this.Block)*/))
+            {
+                var seed = CommonUtils.GetSeedItemStackFromFarmland(this.Genome, agriPlant);
+                newDrops.Add(seed);
+            }
+
+            int gain = Genome.Gain.Dominant.Value;
+            foreach (var it in newDrops)
+            {
+                if (it.Item is ItemPlantableSeed)
+                {
+                    Block block = this.GetCrop();
+                    int stage = 0;
+                    if (block != null)
+                    {
+                        stage = this.GetCropStage(block);
+                    }
+
+                    it.StackSize = Math.Min(2, (int)(agriPlant.SeedDropChance + agriPlant.SeedDropBonus * stage));
+                    continue;
+                }
+                it.StackSize += (int)((gain * rand.Next(1, 3) * 0.2) * it.StackSize);
+            }
+
+            bool isDead = beDeadCrop != null;
+            if (!this.ripeCropColdDamaged && !this.unripeCropColdDamaged && !this.unripeHeatDamaged && !isDead)
+            {
+                ApplyStrengthBuff(newDrops);
+                return newDrops.ToArray();
+            }
+            if (!this.Api.World.Config.GetString("harshWinters", null).ToBool(true))
+            {
+                ApplyStrengthBuff(newDrops);
+                return newDrops.ToArray();
+            }
+            List<ItemStack> stacks = new List<ItemStack>();
+            Block crop = this.GetCrop();
+            BlockCropProperties cropProps = (crop != null) ? crop.CropProps : null;
+            if (cropProps == null)
+            {
+                return newDrops.ToArray();
+            }
+            float mul = 1f;
+            if (this.ripeCropColdDamaged)
+            {
+                mul = cropProps.ColdDamageRipeMul;
+            }
+            if (this.unripeHeatDamaged || this.unripeCropColdDamaged)
+            {
+                mul = cropProps.DamageGrowthStuntMul;
+            }
+            if (isDead)
+            {
+                mul = ((beDeadCrop.deathReason == EnumCropStressType.Eaten) ? 0f : Math.Max(cropProps.ColdDamageRipeMul, cropProps.DamageGrowthStuntMul));
+            }
+            foreach (ItemStack stack in newDrops)
+            {
+                if (stack.Collectible.NutritionProps == null)
+                {
+                    stacks.Add(stack);
+                }
+                else
+                {
+                    float q = (float)stack.StackSize * mul;
+                    float frac = q - (float)((int)q);
+                    stack.StackSize = (int)q + ((this.Api.World.Rand.NextDouble() > (double)frac) ? 1 : 0);
+                    if (stack.StackSize > 0)
+                    {
+                        stacks.Add(stack);
+                    }
+                }
+            }
+            this.MarkDirty(true, null);
+            return stacks.ToArray();
         }
 
-        BlockPos IFarmlandBlockEntity.Pos
-        {
-            get
-            {
-                return this.Pos;
-            }
-        }
 
-        public new Size2i AtlasSize
+        /**************************************************************************
+         **************************************************************************
+         ****************************OTHERS****************************************
+         **************************************************************************
+         **************************************************************************/
+        public void OnCreatedFromSoil(Block block)
         {
-            get
+            string fertility = block.LastCodePart(1);
+            if (block is BlockFarmland)
             {
-                return this.capi.BlockTextureAtlas.Size;
+                fertility = block.LastCodePart(0);
             }
+            this.originalFertility[0] = (int)CANBlockEntityFarmland.Fertilities[fertility];
+            this.originalFertility[1] = (int)CANBlockEntityFarmland.Fertilities[fertility];
+            this.originalFertility[2] = (int)CANBlockEntityFarmland.Fertilities[fertility];
+            this.nutrients[0] = (float)this.originalFertility[0];
+            this.nutrients[1] = (float)this.originalFertility[1];
+            this.nutrients[2] = (float)this.originalFertility[2];
+            this.totalHoursLastUpdate = this.Api.World.Calendar.TotalHours;
+            this.tryUpdateMoistureLevel(this.Api.World.Calendar.TotalDays, true);
         }
+        private bool SetPlantStage(int stage)
+        {
+            Block block = this.GetCrop();
+            if (block == null)
+            {
+                return false;
+            }
+            int currentGrowthStage = this.GetCropStage(block);
 
-        protected enum EnumWaterSearchResult
-        {
-            Found,
-            NotFound,
-
-            Deferred
-        }
-        public double TotalHoursForNextStage
-        {
-            get
+            Block nextBlock = this.Api.World.GetBlock(block.CodeWithParts(stage.ToString() ?? ""));
+            if (nextBlock == null)
             {
-                return this.totalHoursForNextStage;
+                return false;
+            }
+            
+            if (this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) == null)
+            {
+                this.Api.World.BlockAccessor.SetBlock(nextBlock.BlockId, this.upPos);
+            }
+            else
+            {
+                this.Api.World.BlockAccessor.ExchangeBlock(nextBlock.BlockId, this.upPos);
+            }
+            return true;
+        }
+        public void TryClipPlant(ItemSlot clipSlot, IPlayer byPlayer)
+        {
+            if(!this.hasPlant() || agriPlant.Clip_products == null || this.GetCropStageWithout() < agriPlant.MinClipStage || agriPlant.MinClipStage == 0)
+            {
+                return;
+            }
+            if(!SetPlantStage(agriPlant.ClipRollbackStage))
+            {
+                return;
+            }
+           
+            ItemStack clipTool = clipSlot.Itemstack;   
+            foreach (var drop in agriPlant.Clip_products.getRandom(rand))
+            {
+                if(drop.Item is ItemPlantableSeed)
+                {
+                    ITreeAttribute genomeTree = new TreeAttribute();
+                    var fertilityStat = Genome.Fertility.Dominant.Value;
+                    var mutativityStat = Genome.Mutativity.Dominant.Value;
+                    foreach (Gene gene in Genome)
+                    {
+                        ITreeAttribute geneTree = new TreeAttribute();
+                        geneTree.SetInt("D", Math.Min(1 - rand.Next(mutativityStat) + rand.Next(fertilityStat) + gene.Dominant.Value, gene.Dominant.Value));
+                        geneTree.SetInt("R", Math.Min(1 - rand.Next(mutativityStat) + rand.Next(fertilityStat) + gene.Recessive.Value, gene.Recessive.Value));
+                        genomeTree[gene.StatName] = geneTree;
+                    }
+                    drop.Attributes[cancrops.config.genome_tag] = genomeTree;
+                }             
+                this.Api.World.SpawnItemEntity(drop, new Vec3d(this.Pos.X + 0.5, this.Pos.Y + 0.5, this.Pos.Z + 0.5));
+            }
+            clipTool.Collectible.DamageItem(this.Api.World, byPlayer.Entity, clipSlot, 1);
+        }
+        public bool OnBlockInteract(IPlayer byPlayer)
+        {
+            ItemStack stack = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack;
+          
+            JsonObject jsonObject;
+            if (stack == null)
+            {
+                jsonObject = null;
+            }
+            else
+            {
+                CollectibleObject collectible = stack.Collectible;
+                if (collectible == null)
+                {
+                    jsonObject = null;
+                }
+                else
+                {
+                    if(stack.Item?.Tool == EnumTool.Shears)
+                    {
+                        TryClipPlant(byPlayer.InventoryManager.ActiveHotbarSlot, byPlayer);
+                        return true;
+                    }
+                    JsonObject attributes = collectible.Attributes;
+                    jsonObject = ((attributes != null) ? attributes["fertilizerProps"] : null);
+                }
+            }
+            JsonObject obj = jsonObject;
+            if (obj == null || !obj.Exists)
+            {
+                return false;
+            }
+            FertilizerProps props = obj.AsObject<FertilizerProps>(null);
+            if (props == null)
+            {
+                return false;
+            }
+            float nAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[0]), props.N);
+            float pAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[1]), props.P);
+            float kAdd = Math.Min(Math.Max(0f, 150f - this.slowReleaseNutrients[2]), props.K);
+            this.slowReleaseNutrients[0] += nAdd;
+            this.slowReleaseNutrients[1] += pAdd;
+            this.slowReleaseNutrients[2] += kAdd;
+            if (props.PermaBoost != null && !this.PermaBoosts.Contains(props.PermaBoost.Code))
+            {
+                this.originalFertility[0] += props.PermaBoost.N;
+                this.originalFertility[1] += props.PermaBoost.P;
+                this.originalFertility[2] += props.PermaBoost.K;
+                this.PermaBoosts.Add(props.PermaBoost.Code);
+            }
+            string fertCode = stack.Collectible.Attributes["fertilizerTextureCode"].AsString(null);
+            if (fertCode != null)
+            {
+                if (this.fertilizerOverlayStrength == null)
+                {
+                    this.fertilizerOverlayStrength = new Dictionary<string, float>();
+                }
+                float prevValue;
+                this.fertilizerOverlayStrength.TryGetValue(fertCode, out prevValue);
+                this.fertilizerOverlayStrength[fertCode] = prevValue + Math.Max(nAdd, Math.Max(kAdd, pAdd));
+            }
+            this.updateFertilizerQuad();
+            byPlayer.InventoryManager.ActiveHotbarSlot.TakeOut(1);
+            byPlayer.InventoryManager.ActiveHotbarSlot.MarkDirty();
+            IClientPlayer clientPlayer = byPlayer as IClientPlayer;
+            if (clientPlayer != null)
+            {
+                clientPlayer.TriggerFpAnimation(EnumHandInteract.HeldItemInteract);
+            }
+            this.Api.World.PlaySoundAt(this.Api.World.BlockAccessor.GetBlock(this.Pos).Sounds.Hit, (double)this.Pos.X + 0.5, (double)this.Pos.Y + 0.75, (double)this.Pos.Z + 0.5, byPlayer, true, 12f, 1f);
+            this.MarkDirty(false, null);
+            return true;
+        }
+        public void OnCropBlockBroken(IPlayer byPlayer)
+        {
+            this.ripeCropColdDamaged = false;
+            this.unripeCropColdDamaged = false;
+            this.unripeHeatDamaged = false;
+            this.Genome = null;
+            this.agriPlant = null;
+            for (int i = 0; i < this.damageAccum.Length; i++)
+            {
+                this.damageAccum[i] = 0f;
+            }
+            if (this.Api.Side == EnumAppSide.Server)
+            {
+                BlockPos tmpPos;
+                foreach (var dir in BlockFacing.HORIZONTALS)
+                {
+                    tmpPos = this.Pos.AddCopy(dir);
+                    BlockEntity blockEntityFarmland = this.Api.World.BlockAccessor.GetBlockEntity(tmpPos);
+                    if (cancrops.sapi.World.BlockAccessor.GetBlockEntity(this.Pos.AddCopy(dir)) is CANBlockEntityFarmland befl)
+                    {
+                        befl.OnNeighbourBroken(dir.Opposite);
+                    }
+                }
+            }
+            this.MarkDirty(true, null);
+        }
+        protected float GetNearbyWaterDistance(out CANBlockEntityFarmland.EnumWaterSearchResult result, float hoursPassed)
+        {
+            float waterDistance = 99f;
+            this.farmlandIsAtChunkEdge = false;
+            bool saltWater = false;
+            this.Api.World.BlockAccessor.SearchFluidBlocks(new BlockPos(this.Pos.X - 4, this.Pos.Y, this.Pos.Z - 4), new BlockPos(this.Pos.X + 4, this.Pos.Y, this.Pos.Z + 4), delegate (Block block, BlockPos pos)
+            {
+                if (block.LiquidCode == "water")
+                {
+                    waterDistance = Math.Min(waterDistance, (float)Math.Max(Math.Abs(pos.X - this.Pos.X), Math.Abs(pos.Z - this.Pos.Z)));
+                }
+                if (block.LiquidCode == "saltwater")
+                {
+                    saltWater = true;
+                }
+                return true;
+            }, delegate (int cx, int cy, int cz)
+            {
+                this.farmlandIsAtChunkEdge = true;
+            });
+            if (saltWater)
+            {
+                this.damageAccum[4] += hoursPassed;
+            }
+            result = CANBlockEntityFarmland.EnumWaterSearchResult.Deferred;
+            if (this.farmlandIsAtChunkEdge)
+            {
+                return 99f;
+            }
+            this.lastWaterSearchedTotalHours = this.Api.World.Calendar.TotalHours;
+            if (waterDistance < 4f)
+            {
+                result = CANBlockEntityFarmland.EnumWaterSearchResult.Found;
+                return waterDistance;
+            }
+            result = CANBlockEntityFarmland.EnumWaterSearchResult.NotFound;
+            return 99f;
+        }
+        public double GetHoursForNextStage()
+        {
+            Block block = this.GetCrop();
+            if (block == null)
+            {
+                return 99999999.0;
+            }
+            float totalDays = block.CropProps.TotalGrowthDays;
+            if (totalDays > 0f)
+            {
+                totalDays = totalDays / 12f * (float)this.Api.World.Calendar.DaysPerMonth;
+            }
+            else
+            {
+                totalDays = block.CropProps.TotalGrowthMonths * (float)this.Api.World.Calendar.DaysPerMonth;
+            }
+            if (Genome != null)
+            {
+                return (double)(this.Api.World.Calendar.HoursPerDay * totalDays 
+                    / (float)block.CropProps.GrowthStages 
+                    * (1f / this.GetGrowthRate(block.CropProps.RequiredNutrient))
+                    * (float)(0.9 + 0.2 * CANBlockEntityFarmland.rand.NextDouble())
+                    / this.growthRateMul)
+                        * (1f - (Genome.Growth.Dominant.Value * 0.05));
+            }
+            else
+            {
+                return (double)(this.Api.World.Calendar.HoursPerDay * totalDays / (float)block.CropProps.GrowthStages * (1f / this.GetGrowthRate(block.CropProps.RequiredNutrient)) * (float)(0.9 + 0.2 * CANBlockEntityFarmland.rand.NextDouble()) / this.growthRateMul);
             }
         }
-
-        public double TotalHoursFertilityCheck
+        public float GetGrowthRate(EnumSoilNutrient nutrient)
         {
-            get
+            float moistFactor = (float)Math.Pow(Math.Max(0.01, (double)(this.moistureLevel * 100f / 70f) - 0.143), 0.35);
+            if (this.nutrients[(int)nutrient] > 75f)
             {
-                return this.totalHoursLastUpdate;
+                return moistFactor * 1.1f;
             }
+            if (this.nutrients[(int)nutrient] > 50f)
+            {
+                return moistFactor * 1f;
+            }
+            if (this.nutrients[(int)nutrient] > 35f)
+            {
+                return moistFactor * 0.9f;
+            }
+            if (this.nutrients[(int)nutrient] > 20f)
+            {
+                return moistFactor * 0.6f;
+            }
+            if (this.nutrients[(int)nutrient] > 5f)
+            {
+                return moistFactor * 0.3f;
+            }
+            return moistFactor * 0.1f;
         }
-
-        public float[] Nutrients
+        public float GetGrowthRate()
         {
-            get
+            Block crop = this.GetCrop();
+            BlockCropProperties cropProps = (crop != null) ? crop.CropProps : null;
+            if (cropProps != null)
             {
-                return this.nutrients;
+                return this.GetGrowthRate(cropProps.RequiredNutrient);
             }
+            return 1f;
         }
-
-        public float MoistureLevel
+        public float GetDeathChance(int nutrientIndex)
         {
-            get
+            if (this.nutrients[nutrientIndex] <= 5f)
             {
-                return this.moistureLevel;
+                return 0.5f;
             }
+            return 0f;
         }
-
-        public int[] OriginalFertility
+        public bool TryGrowCrop(double currentTotalHours)
         {
-            get
+            Block block = this.GetCrop();
+            if (block == null)
             {
-                return this.originalFertility;
+                return false;
             }
+            int currentGrowthStage = this.GetCropStage(block);
+            if (currentGrowthStage >= block.CropProps.GrowthStages)
+            {
+                return false;
+            }
+            int newGrowthStage = currentGrowthStage + 1;
+            Block nextBlock = this.Api.World.GetBlock(block.CodeWithParts(newGrowthStage.ToString() ?? ""));
+            if (nextBlock == null)
+            {
+                return false;
+            }
+            if (block.CropProps.Behaviors != null)
+            {
+                EnumHandling handled = EnumHandling.PassThrough;
+                bool result = false;
+                CropBehavior[] behaviors = block.CropProps.Behaviors;
+                for (int i = 0; i < behaviors.Length; i++)
+                {
+                    result = behaviors[i].TryGrowCrop(this.Api, this, currentTotalHours, newGrowthStage, ref handled);
+                    if (handled == EnumHandling.PreventSubsequent)
+                    {
+                        return result;
+                    }
+                }
+                if (handled == EnumHandling.PreventDefault)
+                {
+                    return result;
+                }
+            }
+            if (this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) == null)
+            {
+                this.Api.World.BlockAccessor.SetBlock(nextBlock.BlockId, this.upPos);
+            }
+            else
+            {
+                this.Api.World.BlockAccessor.ExchangeBlock(nextBlock.BlockId, this.upPos);
+            }
+            this.ConsumeNutrients(block);
+            return true;
         }
-
-        public BlockPos UpPos
+        private void ConsumeNutrients(Block cropBlock)
         {
-            get
-            {
-                return this.upPos;
-            }
+            float nutrientLoss = cropBlock.CropProps.NutrientConsumption / (float)cropBlock.CropProps.GrowthStages;
+            this.nutrients[(int)cropBlock.CropProps.RequiredNutrient] = Math.Max(0f, this.nutrients[(int)cropBlock.CropProps.RequiredNutrient] - nutrientLoss);
+            this.UpdateFarmlandBlock();
         }
-
-        public ITreeAttribute CropAttributes
+        internal int GetFertilityLevel(float fertiltyValue)
         {
-            get
+            int i = 0;
+            foreach (KeyValuePair<string, float> val in CANBlockEntityFarmland.Fertilities)
             {
-                return this.cropAttrs;
+                if (val.Value >= fertiltyValue)
+                {
+                    return i;
+                }
+                i++;
             }
+            return CANBlockEntityFarmland.Fertilities.Count - 1;
         }
-        public bool IsVisiblyMoist
+        internal Block GetCrop()
         {
-            get
+            if(this.upPos == null)
             {
-                return (double)this.moistureLevel > 0.1;
+                return null;
             }
+            Block block = this.Api.World.BlockAccessor.GetBlock(this.upPos);
+            if (block == null || block.CropProps == null)
+            {
+                return null;
+            }
+            return block;
+        }
+        internal int GetCropStage(Block block)
+        {
+            int stage;
+            int.TryParse(block.LastCodePart(0), out stage);
+            return stage;
+        }
+        public int GetCropStageWithout()
+        {
+            Block crop = this.GetCrop();
+            if (crop != null)
+            {
+                return this.GetCropStage(this.GetCrop());
+            }
+            return 0;
+        }
+        public void WaterFarmland(float dt, bool waterNeightbours = true)
+        {
+            this.moistureLevel = Math.Min(1f, this.moistureLevel + dt / 2f);
+            if (waterNeightbours)
+            {
+                foreach (BlockFacing neib in BlockFacing.HORIZONTALS)
+                {
+                    BlockPos npos = this.Pos.AddCopy(neib);
+                    CANBlockEntityFarmland bef = this.Api.World.BlockAccessor.GetBlockEntity(npos) as CANBlockEntityFarmland;
+                    if (bef != null)
+                    {
+                        bef.WaterFarmland(dt / 3f, false);
+                    }
+                }
+            }
+            this.updateMoistureLevel(this.Api.World.Calendar.TotalDays, this.lastWaterDistance);
+            this.UpdateFarmlandBlock();
+        }       
+        public float ConsumeOnePortion(Entity entity)
+        {
+            Block crop = this.GetCrop();
+            if (crop == null)
+            {
+                return 0f;
+            }
+            Block block = this.Api.World.GetBlock(new AssetLocation("deadcrop"));
+            this.Api.World.BlockAccessor.SetBlock(block.Id, this.upPos);
+            BlockEntityDeadCrop blockEntityDeadCrop = this.Api.World.BlockAccessor.GetBlockEntity(this.upPos) as BlockEntityDeadCrop;
+            blockEntityDeadCrop.Inventory[0].Itemstack = new ItemStack(crop, 1);
+            blockEntityDeadCrop.deathReason = EnumCropStressType.Eaten;
+            return 1f;
         }
     }
-
 }

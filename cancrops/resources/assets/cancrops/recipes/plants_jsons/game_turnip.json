@@ -7,5 +7,18 @@
   "spreadchance": 0.3,
   "seeddropchance": 1.0,
   "seeddropbonus": 0.0,
-  "allowSourceStage": 2
+  "allowSourceStage": 2,
+  "MinClipStage": 4,
+  "ClipRollbackStage": 2,
+  "Clip_products": {
+    "Products": [
+      {
+        "CollectibleCode": "game:seeds-turnip",
+        "ItemClass": 1,
+        "Avg": 0.5,
+        "Var": 0.3,
+        "LastDrop": false
+      }
+    ]
+  }
 }

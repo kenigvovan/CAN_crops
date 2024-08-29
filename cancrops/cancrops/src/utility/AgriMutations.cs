@@ -1,5 +1,4 @@
-﻿using cancrops.src.templates;
-using cancrops.src.templates;
+﻿using cancrops.src.implementations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +39,6 @@ namespace cancrops.src.utility
         public IEnumerable<AgriMutation> getMutationsFromParents((AgriPlant, AgriPlant) plants)
         {
             this.mutationListByParents.TryGetValue((plants.Item1.Domain + ":" + plants.Item1.Id, plants.Item2.Domain + ":" + plants.Item2.Id), out List<AgriMutation> mutations);
-
             return mutations ?? new List<AgriMutation>();
         }
     }

@@ -31,9 +31,14 @@
 	},
 	"guiTransform": {
 		"translation": {
-			"x": 4,
-			"y": 19,
+			"x": 0,
+			"y": 0,
 			"z": 0
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.3,
+			"z": 0.1
 		},
 		"scale": 1.55
 	},

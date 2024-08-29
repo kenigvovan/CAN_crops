@@ -1,0 +1,90 @@
+﻿{
+	"code": "handcultivatorhead",
+	"shape": {
+		"base": "cancrops:hand_cultivator_head"
+	},
+	"maxstacksize": 4,
+	"creativeinventory": {
+		"general": [ "*" ],
+		"cancrops": [ "*" ]
+	},
+	"heldTpUseAnimation": "hoe",
+	"damagedby": [ "blockbreaking", "attacking" ],
+	"heldTpHitAnimation": "breaktool",
+	"texturesByType": {
+		"*": {
+			"blade": { "base": "game:block/metal/ingot/{material}" }
+		}
+	},
+	"variantgroups": [
+		{
+			"code": "material",
+			"states": [
+				"copper",
+				"tinbronze",
+				"bismuthbronze",
+				"blackbronze",
+				"gold",
+				"silver",
+				"iron",
+				"meteoriciron",
+				"steel"
+			]
+		}
+	],
+	"durabilitybytype": {
+		"handcultivator-gold": 90,
+		"handcultivator-silver": 90,
+		"handcultivator-copper": 200,
+		"handcultivator-tinbronze": 280,
+		"handcultivator-bismuthbronze": 300,
+		"handcultivator-blackbronze": 330,
+		"handcultivator-iron": 500,
+		"handcultivator-meteoriciron": 600,
+		"handcultivator-steel": 1250
+	},
+	"fpHandTransform": {
+		"translation": {
+			"x": 0.05,
+			"y": -0.2,
+			"z": 0
+		},
+		"rotation": {
+			"x": 166,
+			"y": 70,
+			"z": -9
+		},
+		"scale": 1.28
+	},
+	"guiTransform": {
+		"translation": {
+			"x": 0.3,
+			"y": 1,
+			"z": 6
+		},
+		"rotation": {
+			"x": -43,
+			"y": -38,
+			"z": 0
+		},
+		"origin": {
+			"x": 0.45,
+			"y": 0.4,
+			"z": 0.2
+		},
+		"scale": 5.23
+	},
+	"tpHandTransform": {
+		"translation": {
+			"x": -0.65,
+			"y": -0.1,
+			"z": -0.6
+		},
+		"rotation": {
+			"x": -21,
+			"y": -3,
+			"z": -17
+		},
+		"scale": 1.14
+	}
+}

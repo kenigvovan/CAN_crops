@@ -1,0 +1,24 @@
+[
+  {
+    "enabled": true,
+    "mods": [
+      "cancrops"
+    ],
+    "chance": 0.1,
+    "child": "cancrops:fieldmushroom",
+    "parent1": "game:flax",
+    "parent2": "game:carrot",
+    "conditions": []
+  },
+  {
+    "enabled": true,
+    "mods": [
+      "cancrops"
+    ],
+    "chance": 0.1,
+    "child": "cancrops:almondmushroom",
+    "parent1": "game:peanut",
+    "parent2": "game:rye",
+    "conditions": []
+  }
+]

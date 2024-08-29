@@ -7,5 +7,18 @@
   "spreadchance": 0.2,
   "seeddropchance": 1.0,
   "seeddropbonus": 0.0,
-  "allowSourceStage": 8
+  "allowSourceStage": 8,
+  "MinClipStage": 13,
+  "ClipRollbackStage": 6,
+  "Clip_products": {
+    "Products": [
+      {
+        "CollectibleCode": "game:seeds-pineapple",
+        "ItemClass": 1,
+        "Avg": 0.5,
+        "Var": 0.3,
+        "LastDrop": false
+      }
+    ]
+  }
 }

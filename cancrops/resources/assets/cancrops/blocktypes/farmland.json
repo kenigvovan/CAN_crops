@@ -46,8 +46,20 @@
 	"textures": {
 		"up": { "base": "game:block/soil/farmland/fert{fertility}-{state}" },
 		"all": { "base": "game:block/soil/fert{fertility}" },
-		"generic": { "base": "cancrops:block/generic" }
-	},
+		"generic": { "base": "cancrops:block/generic" },
+		"s3": {
+			"base": "cancrops:block/s3"
+		},
+		"e2": {
+			"base": "cancrops:block/e2"
+		},
+		"s1": {
+			"base": "cancrops:block/s1"
+		},
+		"e3": {
+			"base": "cancrops:block/e3"
+		}
+		},
 	"replaceable": 900,
 	"fertilityByType": {
 		"*-verylow": 5,

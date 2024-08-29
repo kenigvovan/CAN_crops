@@ -1,0 +1,22 @@
+﻿[{
+  "ingredientPattern": "T,S",
+  "ingredients": {
+    "T": {
+      "type": "item",
+      "code": "cancrops:handcultivatorhead-*",
+      "name": "metal",
+      "allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "iron", "meteoriciron", "steel" ]
+    },
+    "S": {
+      "type": "item",
+      "code": "game:stick"
+    }
+  },
+  "width": 1,
+  "height": 2,
+  "output": {
+    "type": "item",
+    "code": "cancrops:handcultivator-{metal}",
+    "quantity": 1
+  }
+}]

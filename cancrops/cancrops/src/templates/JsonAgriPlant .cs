@@ -8,10 +8,11 @@ using Vintagestory.API.Common;
 using cancrops.src.utility;
 using cancrops.src.templates;
 using Vintagestory.Common;
+using cancrops.src.implementations;
 
 namespace cancrops.src.templates
 {
-    public class AgriPlant: IAgriRegisterable
+    public class JsonAgriPlant : IAgriRegisterable
     {
         public bool Enabled { get; set; }
         public string Domain { get; set; }
@@ -24,29 +25,20 @@ namespace cancrops.src.templates
         public double SeedDropBonus { get; set; }
         public bool AllowCloning { get; set; }
         public int AllowSourceStage { get; set; }
-
-        public AgriProductList Products { get; set; }
-        public AgriProductList Clip_products { get; set; }
-        public AgriRequirement Requirement { get; set; }
-
-        public AgriPlant()
+        public bool ClipSeedsHaveStats { get; set; }
+        public int MinClipStage { get; set; }
+        public int ClipRollbackStage { get; set; }
+        public JsonAgriProductList Products { get; set; }
+        public JsonAgriProductList Clip_products { get; set; }
+        public JsonAgriRequirement Requirement { get; set; }
+        public JsonAgriPlant()
         {
             
         }
-
-        public void getHarvestProducts(List<ItemStack> products, Random rand)
-        {
-            products = Products
-                .getRandom(rand)
-                    .ConvertAll(product => product.convertSingle(product, rand))
-                    .Where(it => it != null).ToList();
-        }
-
         public int CompareTo(object obj)
         {
             throw new NotImplementedException();
         }
-
         public string getId()
         {
             return Id;

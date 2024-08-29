@@ -8,8 +8,8 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"s3": "C:/Users/koeni/source/repos/cancrops/mods/cancrops/assets/cancrops/textures/block/s3",
-		"e2": "C:/Users/koeni/source/repos/cancrops/mods/cancrops/assets/cancrops/textures/block/e2"
+		"s3": "cancrops:block/s3",
+		"e2": "cancrops:block/e2"
 	},
 	"elements": [
 		{

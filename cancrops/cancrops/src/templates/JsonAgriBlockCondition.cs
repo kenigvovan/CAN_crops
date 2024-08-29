@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace cancrops.src.templates
 {
-    public class AgriBlockCondition
+    public class JsonAgriBlockCondition
     {
         public string BlockName { get; set; }
-        public int Strength { get; set; }
         public int Amount { get; set; }
         public int MinX { get; set; }
         public int MinY { get; set; }
@@ -17,6 +16,5 @@ namespace cancrops.src.templates
         public int MaxX { get; set; }
         public int MaxY { get; set; }
         public int MaxZ { get; set; }
-
     }
 }

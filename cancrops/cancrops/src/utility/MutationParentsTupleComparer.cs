@@ -15,9 +15,10 @@ namespace cancrops.src.utility
 
         public int GetHashCode((string, string) obj)
         {
+            bool firstHigher = obj.Item1.CompareTo(obj.Item2) > 0;
             int hash = 17;
-            hash = hash * 23 + obj.Item1.GetHashCode();
-            hash = hash * 23 + obj.Item2.GetHashCode();
+            hash = hash * 23 + (firstHigher ? obj.Item1.GetHashCode() : obj.Item2.GetHashCode());
+            hash = hash * 23 + (firstHigher ? obj.Item2.GetHashCode() : obj.Item1.GetHashCode());
             return hash;
         }
     }

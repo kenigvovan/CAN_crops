@@ -1,8 +1,9 @@
 ﻿using cancrops.src.blockenities;
 using cancrops.src.blocks;
 using cancrops.src.genetics;
-using cancrops.src.templates;
+using cancrops.src.implementations;
 using HarmonyLib;
+using PrimitiveSurvival.ModSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace cancrops.src
     [HarmonyPatch]
     public class harmPatch
     {
+        ////////  WATERING CAN
         public static bool Prefix_BlockWateringCan_OnHeldInteractStep(BlockWateringCan __instance, float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ICoreAPI ___api, ref bool __result)
         {
             if (blockSel == null)
@@ -143,7 +145,10 @@ namespace cancrops.src
             __result = true;
             return true;
         }
-            //SEEDS
+
+
+
+        ////////  SEEDS
         public static bool Prefix_ItemPlantableSeed_OnHeldInteractStart(Vintagestory.GameContent.ItemPlantableSeed __instance, ItemSlot itemslot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ICoreAPI ___api)
         {
             //(byEntity as EntityPlayer).Player.InventoryManager
@@ -248,9 +253,31 @@ namespace cancrops.src
             }
             
         }
+       
+        
+        
+        ////////  INTERACTION WITH NEW FARMALND 
+        public static IEnumerable<CodeInstruction> Transpiler_OnLoaded(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            bool found = false;
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!found &&
+                    codes[i].opcode == OpCodes.Ldtoken && codes[i + 1].opcode == OpCodes.Call && codes[i + 2].opcode == OpCodes.Call && codes[i - 1].opcode == OpCodes.Callvirt)
+                {
+                    yield return new CodeInstruction(OpCodes.Ldtoken, typeof(CANBlockEntityFarmland));
+
+                    //found = true;
+                    continue;
+                }
+                yield return codes[i];
+            }
+        }
 
 
 
+        //////// HOE
         public static bool Prefix_DoTill(Vintagestory.GameContent.ItemHoe __instance, float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
         {
             if (blockSel == null)
@@ -288,6 +315,10 @@ namespace cancrops.src
             byEntity.World.BlockAccessor.MarkBlockDirty(pos);
             return false;
         }
+
+
+
+        //////// BLOCK CROP
         public static bool Prefix_GetPlacedBlockInfo(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer forPlayer, ref string __result)
         {
             Block block = world.BlockAccessor.GetBlock(pos.DownCopy(1));
@@ -311,26 +342,145 @@ namespace cancrops.src
             });
             return false;
         }
-        public static AssetLocation Stub_RegistryObject_CodeWithPath(object instance, string path)
+        public static bool Prefix_GetDrops(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref ItemStack[] __result, float dropQuantityMultiplier = 1f)
+        {
+            CANBlockEntityFarmland canbefarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as CANBlockEntityFarmland;
+            if (canbefarmland != null)
+            {
+                __instance.SplitDropStacks = false;
+
+                ItemStack[] candrops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
+                if (canbefarmland == null)
+                {
+                    List<ItemStack> moddrops = new List<ItemStack>();
+                    foreach (ItemStack drop in candrops)
+                    {
+                        if (!(drop.Item is ItemPlantableSeed))
+                        {
+                            drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
+                        }
+                        if (drop.StackSize > 0)
+                        {
+                            moddrops.Add(drop);
+                        }
+                    }
+                    candrops = moddrops.ToArray();
+                }
+                if (canbefarmland != null)
+                {
+                    if (!canbefarmland.hasPlant())
+                    {
+                        return true;
+                    }
+                    candrops = canbefarmland.GetDrops(candrops, byPlayer);
+                }
+                __result = candrops;
+                return false;
+            }
+            else
+            {
+                BlockEntityFarmland befarmland2 = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as BlockEntityFarmland;
+
+                __instance.SplitDropStacks = false;
+                ItemStack[] drops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
+                if (befarmland2 == null)
+                {
+                    List<ItemStack> moddrops = new List<ItemStack>();
+                    foreach (ItemStack drop in drops)
+                    {
+                        if (!(drop.Item is ItemPlantableSeed))
+                        {
+                            drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
+                        }
+                        if (drop.StackSize > 0)
+                        {
+                            moddrops.Add(drop);
+                        }
+                    }
+                    drops = moddrops.ToArray();
+                }
+                if (befarmland2 != null)
+                {
+                    drops = befarmland2.GetDrops(drops);
+                }
+                __result = drops;
+                return false;
+            }
+        }
+        [HarmonyReversePatch]
+        [HarmonyPatch(typeof(Block), "OnBlockBroken")]
+        public static void Stub_Block_OnBlockBroken(object instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             // its a stub so it has no initial content
             throw new NotImplementedException("It's a stub");
             // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
         }
-        public static void Stub_Item_GetHeldItemInfo(object instance, ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
+        public static ItemStack[] Stub_GetDrops(object instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             // its a stub so it has no initial content
             throw new NotImplementedException("It's a stub");
             // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
         }
-        public static bool Stub_Block_OnBlockInteractStart(object instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Vintagestory.GameContent.BlockCrop), "OnBlockBroken")]
+        public static bool Prefix_OnBlockBroken(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
-            // its a stub so it has no initial content
-            throw new NotImplementedException("It's a stub");
-            // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+            Stub_Block_OnBlockBroken(__instance, world, pos, byPlayer, dropQuantityMultiplier);
+            BlockEntity blockEntityFarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1));
+            if (blockEntityFarmland is CANBlockEntityFarmland canBe)
+            {
+                canBe.OnCropBlockBroken(byPlayer);
+                return false;
+            }
+            return false;
+        }
+        public static bool Prefix_BlockCrop_OnBlockInteractStart(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref bool __result)
+        {
+            if (world.BlockAccessor.GetBlockEntity(blockSel.Position.DownCopy()) is CANBlockEntityFarmland blockEntityFarmland && blockEntityFarmland.OnBlockInteract(byPlayer))
+            {
+                __result = true;
+                return false;
+            }
+            return true;
         }
         
 
+        //////// FARMLAND
+        public static void OnCreatedFromSoil(CANBlockEntityFarmland be, Block bl)
+        {
+            (be as CANBlockEntityFarmland).OnCreatedFromSoil(bl);
+        }
+        public static IEnumerable<CodeInstruction> Transpiler_ItemHoe_DoTill(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            bool found = false;
+            bool found2 = false;
+            var proxyMethod = AccessTools.Method(typeof(harmPatch), "OnCreatedFromSoil");
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!found &&
+                    codes[i].opcode == OpCodes.Ldstr && codes[i + 1].opcode == OpCodes.Ldloc_2 && codes[i + 2].opcode == OpCodes.Call && codes[i - 1].opcode == OpCodes.Ldfld)
+                {
+                    //yield return new CodeInstruction(OpCodes.Ldstr, "cancrops:canfarmland-dry-");
+                    //yield return new CodeInstruction(OpCodes.Call, proxyMethod);
+                    found = true;
+                    //continue;
+                }
+
+                if (!found2 &&
+                   codes[i].opcode == OpCodes.Ldloc_S && codes[i + 1].opcode == OpCodes.Isinst && codes[i + 2].opcode == OpCodes.Brfalse_S && codes[i - 1].opcode == OpCodes.Stloc_S
+                   && codes[i - 2].opcode == OpCodes.Callvirt)
+                {
+                    yield return new CodeInstruction(OpCodes.Ldloc_S, 5);
+                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
+                    yield return new CodeInstruction(OpCodes.Ldloc_S, 1);
+                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
+                    found2 = true;
+                }
+                yield return codes[i];
+            }
+        }
         public static bool Prefix_BlockFarmland_OnBlockInteractStart(Vintagestory.GameContent.BlockFarmland __instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref bool __result)
         {
             BlockEntityFarmland befarmland = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntityFarmland;
@@ -381,217 +531,6 @@ namespace cancrops.src
                 yield return codes[i];
             }
         }
-        
-        public static ItemStack[] Stub_GetDrops(object instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
-        {
-            // its a stub so it has no initial content
-            throw new NotImplementedException("It's a stub");
-            // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
-        }
-        public static bool Prefix_GetDrops(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref ItemStack[] __result, float dropQuantityMultiplier = 1f)
-        {
-            CANBlockEntityFarmland canbefarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as CANBlockEntityFarmland;
-            if (canbefarmland != null)
-            {
-                __instance.SplitDropStacks = false;
-
-                ItemStack[] candrops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
-                if (canbefarmland == null)
-                {
-                    List<ItemStack> moddrops = new List<ItemStack>();
-                    foreach (ItemStack drop in candrops)
-                    {
-                        if (!(drop.Item is ItemPlantableSeed))
-                        {
-                            drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
-                        }
-                        if (drop.StackSize > 0)
-                        {
-                            moddrops.Add(drop);
-                        }
-                    }
-                    candrops = moddrops.ToArray();
-                }
-                if (canbefarmland != null)
-                {
-                    if(!canbefarmland.hasPlant())
-                    {
-                        return true;
-                    }
-                    candrops = canbefarmland.GetDrops(candrops, byPlayer);
-                }
-                __result = candrops;
-                return false;
-            }
-            else
-            {
-                BlockEntityFarmland befarmland2 = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as BlockEntityFarmland;
-
-                __instance.SplitDropStacks = false;
-                ItemStack[] drops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
-                if (befarmland2 == null)
-                {
-                    List<ItemStack> moddrops = new List<ItemStack>();
-                    foreach (ItemStack drop in drops)
-                    {
-                        if (!(drop.Item is ItemPlantableSeed))
-                        {
-                            drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
-                        }
-                        if (drop.StackSize > 0)
-                        {
-                            moddrops.Add(drop);
-                        }
-                    }
-                    drops = moddrops.ToArray();
-                }
-                if (befarmland2 != null)
-                {
-                    drops = befarmland2.GetDrops(drops);
-                }
-                __result = drops;
-                return false;
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-           /* BlockEntityFarmland befarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as BlockEntityFarmland;
-            if (befarmland == null)
-            {
-                CANBlockEntityFarmland canbefarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1)) as CANBlockEntityFarmland;
-                if (canbefarmland == null)
-                {
-                    dropQuantityMultiplier *= ((byPlayer != null) ? byPlayer.Entity.Stats.GetBlended("wildCropDropRate") : 1f);
-                }
-                __instance.SplitDropStacks = false;
-                
-                ItemStack[] candrops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
-                if (canbefarmland == null)
-                {
-                    List<ItemStack> moddrops = new List<ItemStack>();
-                    foreach (ItemStack drop in candrops)
-                    {
-                        if (!(drop.Item is ItemPlantableSeed))
-                        {
-                            drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
-                        }
-                        if (drop.StackSize > 0)
-                        {
-                            moddrops.Add(drop);
-                        }
-                    }
-                    candrops = moddrops.ToArray();
-                }
-                if (canbefarmland != null)
-                {
-                    candrops = canbefarmland.GetDrops(candrops, byPlayer);
-                }
-                __result = candrops;
-                return false;
-            }
-            __instance.SplitDropStacks = false;
-            ItemStack[] drops = Stub_GetDrops(__instance, world, pos, byPlayer, dropQuantityMultiplier);
-            if (befarmland == null)
-            {
-                List<ItemStack> moddrops = new List<ItemStack>();
-                foreach (ItemStack drop in drops)
-                {
-                    if (!(drop.Item is ItemPlantableSeed))
-                    {
-                        drop.StackSize = GameMath.RoundRandom(world.Rand, BlockCrop.WildCropDropMul * (float)drop.StackSize);
-                    }
-                    if (drop.StackSize > 0)
-                    {
-                        moddrops.Add(drop);
-                    }
-                }
-                drops = moddrops.ToArray();
-            }
-            if (befarmland != null)
-            {
-                drops = befarmland.GetDrops(drops);
-            }
-            __result = drops;
-            return false;*/
-        }
-
-
-        public static IEnumerable<CodeInstruction> Transpiler_GetDrops(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            bool found = false;
-            bool found2 = false;
-            var proxyMethod = AccessTools.Method(typeof(CANBlockEntityFarmland), "GetDrops");
-            var codes = new List<CodeInstruction>(instructions);
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (!found &&
-                    codes[i].opcode == OpCodes.Isinst && codes[i + 1].opcode == OpCodes.Stloc_0 && codes[i + 2].opcode == OpCodes.Ldloc_0 && codes[i - 1].opcode == OpCodes.Callvirt)
-                {
-                    //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    yield return new CodeInstruction(OpCodes.Isinst, typeof(CANBlockEntityFarmland));
-                    
-                    yield return new CodeInstruction(OpCodes.Stloc_0);
-                    yield return new CodeInstruction(OpCodes.Ldloc_0);
-                    //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    i += 2;
-                    found = true;
-                    continue;
-                }
-
-                if (!found2 &&
-                   codes[i].opcode == OpCodes.Ldloc_0 && codes[i + 1].opcode == OpCodes.Ldloc_1 && codes[i + 2].opcode == OpCodes.Callvirt && codes[i - 1].opcode == OpCodes.Brfalse_S
-                   && codes[i - 2].opcode == OpCodes.Ldloc_0)
-                {
-                    yield return codes[i];
-                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    yield return new CodeInstruction(OpCodes.Ldloc_1);
-                    yield return new CodeInstruction(OpCodes.Callvirt, proxyMethod);
-                    found2 = true;
-                    i += 2;
-                    continue;
-                }
-                yield return codes[i];
-            }
-        }
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(Block), "OnBlockBroken")]
-        public static void Stub_Block_OnBlockBroken(object instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
-        {
-            // its a stub so it has no initial content
-            throw new NotImplementedException("It's a stub");
-           // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
-        }
-        //Prefix_OnBlockInteractStart
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(Vintagestory.GameContent.BlockCrop), "OnBlockBroken")]
-        public static bool Prefix_OnBlockBroken(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
-        {
-            Stub_Block_OnBlockBroken(__instance, world, pos, byPlayer, dropQuantityMultiplier);
-            BlockEntity blockEntityFarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1));
-            if (blockEntityFarmland is CANBlockEntityFarmland canBe)
-            {
-                canBe.OnCropBlockBroken(byPlayer);
-                return false;
-            }
-            
-            
-            return false;
-        }
-        
-
-        public static MethodInfo OnCropBlockBrokenMethod = typeof(CANBlockEntityFarmland).GetMethod("OnCropBlockBroken");
         public static IEnumerable<CodeInstruction> Transpiler_OnBlockBroken(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             bool found = false;
@@ -603,7 +542,7 @@ namespace cancrops.src
                 if (!found &&
                     codes[i].opcode == OpCodes.Isinst && codes[i + 1].opcode == OpCodes.Dup && codes[i + 2].opcode == OpCodes.Brtrue_S && codes[i - 1].opcode == OpCodes.Callvirt)
                 {
-                    
+
                     //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
                     yield return new CodeInstruction(OpCodes.Isinst, typeof(CANBlockEntityFarmland));
 
@@ -618,24 +557,6 @@ namespace cancrops.src
                     yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
                     yield return new CodeInstruction(OpCodes.Call, proxyMethod);
                     found2 = true;
-                    continue;
-                }
-                yield return codes[i];
-            }
-        }
-        public static IEnumerable<CodeInstruction> Transpiler_OnLoaded(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            bool found = false;
-            var codes = new List<CodeInstruction>(instructions);
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (!found &&
-                    codes[i].opcode == OpCodes.Ldtoken && codes[i + 1].opcode == OpCodes.Call && codes[i + 2].opcode == OpCodes.Call && codes[i - 1].opcode == OpCodes.Callvirt)
-                {
-                    //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    yield return new CodeInstruction(OpCodes.Ldtoken, typeof(CANBlockEntityFarmland));
-
-                    //found = true;
                     continue;
                 }
                 yield return codes[i];
@@ -674,30 +595,11 @@ namespace cancrops.src
                 yield return codes[i];
             }
         }
-       /* [HarmonyReversePatch]
-        [HarmonyPatch(typeof(BlockEntityFarmland), "OnBlockInteract")]
-        public static bool Stub_BlockEntityFarmland_OnBlockInteract(object instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
-        {
-            // its a stub so it has no initial content
-            throw new NotImplementedException("It's a stub");
-        }
-        public static void Prefix_OnBlockInteractStart(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref bool __result)
-        {
-            BlockEntityFarmland blockEntityFarmland = world.BlockAccessor.GetBlockEntity(blockSel.Position.DownCopy()) as BlockEntityFarmland;
-            if (blockEntityFarmland != null && blockEntityFarmland.OnBlockInteract(byPlayer))
-            {
-                __result = true;
-                return;
-            }
-
-            __result = Stub_BlockEntityFarmland_OnBlockInteract(__instance, world, byPlayer, blockSel);
-            return;
-        }*/
-        public static MethodInfo OnBlockInteractMethod = typeof(CANBlockEntityFarmland).GetMethod("OnBlockInteract");
-        public static IEnumerable<CodeInstruction> Transpiler_OnBlockInteractStart(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        public static IEnumerable<CodeInstruction> Transpiler_GetDrops(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             bool found = false;
             bool found2 = false;
+            var proxyMethod = AccessTools.Method(typeof(CANBlockEntityFarmland), "GetDrops");
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count; i++)
             {
@@ -705,57 +607,71 @@ namespace cancrops.src
                     codes[i].opcode == OpCodes.Isinst && codes[i + 1].opcode == OpCodes.Stloc_0 && codes[i + 2].opcode == OpCodes.Ldloc_0 && codes[i - 1].opcode == OpCodes.Callvirt)
                 {
                     //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
+                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
                     yield return new CodeInstruction(OpCodes.Isinst, typeof(CANBlockEntityFarmland));
-                    
+
+                    yield return new CodeInstruction(OpCodes.Stloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    //yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
+                    i += 2;
                     found = true;
                     continue;
                 }
 
                 if (!found2 &&
-                   codes[i].opcode == OpCodes.Callvirt && codes[i + 1].opcode == OpCodes.Brfalse_S && codes[i + 2].opcode == OpCodes.Ldc_I4_1 && codes[i - 1].opcode == OpCodes.Ldarg_2
+                   codes[i].opcode == OpCodes.Ldloc_0 && codes[i + 1].opcode == OpCodes.Ldloc_1 && codes[i + 2].opcode == OpCodes.Callvirt && codes[i - 1].opcode == OpCodes.Brfalse_S
                    && codes[i - 2].opcode == OpCodes.Ldloc_0)
                 {
-                    yield return new CodeInstruction(OpCodes.Callvirt, OnBlockInteractMethod);
+                    yield return codes[i];
+                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
+                    yield return new CodeInstruction(OpCodes.Ldloc_1);
+                    yield return new CodeInstruction(OpCodes.Callvirt, proxyMethod);
                     found2 = true;
+                    i += 2;
                     continue;
                 }
                 yield return codes[i];
             }
         }
-        public static void OnCreatedFromSoil(CANBlockEntityFarmland be, Block bl)
-        {
-            //var c = 3;
-            (be as CANBlockEntityFarmland).OnCreatedFromSoil(bl);
-        }
-        public static IEnumerable<CodeInstruction> Transpiler_ItemHoe_DoTill(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            bool found = false;
-            bool found2 = false;
-            var proxyMethod = AccessTools.Method(typeof(harmPatch), "OnCreatedFromSoil");
-            var codes = new List<CodeInstruction>(instructions);
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (!found &&
-                    codes[i].opcode == OpCodes.Ldstr && codes[i + 1].opcode == OpCodes.Ldloc_2 && codes[i + 2].opcode == OpCodes.Call && codes[i - 1].opcode == OpCodes.Ldfld)
-                {
-                    //yield return new CodeInstruction(OpCodes.Ldstr, "cancrops:canfarmland-dry-");
-                    //yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    found = true;
-                    //continue;
-                }
 
-                if (!found2 &&
-                   codes[i].opcode == OpCodes.Ldloc_S && codes[i + 1].opcode == OpCodes.Isinst && codes[i + 2].opcode == OpCodes.Brfalse_S && codes[i - 1].opcode == OpCodes.Stloc_S
-                   && codes[i - 2].opcode == OpCodes.Callvirt)
+
+
+        //////// DEADCROP
+        public static void Postfix_Block_OnBlockBroken(Vintagestory.API.Common.Block __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+        {
+            if (__instance is BlockDeadCrop)
+            {
+                BlockEntity blockEntityFarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy(1));
+                if (blockEntityFarmland is CANBlockEntityFarmland canBe)
                 {
-                    yield return new CodeInstruction(OpCodes.Ldloc_S, 5);
-                    yield return new CodeInstruction(OpCodes.Castclass, typeof(CANBlockEntityFarmland));
-                    yield return new CodeInstruction(OpCodes.Ldloc_S, 1);
-                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    found2 = true;
+                    canBe.OnCropBlockBroken(byPlayer);
                 }
-                yield return codes[i];
             }
         }
+
+
+
+
+
+        public static AssetLocation Stub_RegistryObject_CodeWithPath(object instance, string path)
+        {
+            // its a stub so it has no initial content
+            throw new NotImplementedException("It's a stub");
+            // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        }
+        public static void Stub_Item_GetHeldItemInfo(object instance, ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
+        {
+            // its a stub so it has no initial content
+            throw new NotImplementedException("It's a stub");
+            // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        }
+        public static bool Stub_Block_OnBlockInteractStart(object instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            // its a stub so it has no initial content
+            throw new NotImplementedException("It's a stub");
+            // (instance as Block).OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        }                
+        public static MethodInfo OnCropBlockBrokenMethod = typeof(CANBlockEntityFarmland).GetMethod("OnCropBlockBroken");       
+        public static MethodInfo OnBlockInteractMethod = typeof(CANBlockEntityFarmland).GetMethod("OnBlockInteract");              
     }
 }

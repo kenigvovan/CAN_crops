@@ -15,7 +15,70 @@
       "MinLight": 4,
       "MaxLight": 9,
       "LightToleranceFactor": 0.5,
-      "Conditions": []
+      "Conditions": [
+        {
+          "Amount": 1,
+          "MinX": 0,
+          "MinY": -2,
+          "MinZ": 0,
+          "MaxX": 0,
+          "MaxY": -2,
+          "MaxZ": 0,
+          "BlockName": "game:bonysoil"
+        }
+      ]
+    },
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "cancrops:seeds-fieldmushroom",
+          "ItemClass": 1,
+          "Avg": 0.6,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "cancrops",
+    "id": "almondmushroom",
+    "growthmultiplier": 1.0,
+    "AllowUnderGround": true,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3,
+    "requirement": {
+      "LightLevelType": 2,
+      "MinLight": 4,
+      "MaxLight": 9,
+      "LightToleranceFactor": 0.5,
+      "Conditions": [
+        {
+          "Amount": 1,
+          "MinX": 0,
+          "MinY": -2,
+          "MinZ": 0,
+          "MaxX": 0,
+          "MaxY": -2,
+          "MaxZ": 0,
+          "BlockName": "game:bonysoil"
+        }
+      ]
+    },
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "cancrops:seeds-almondmushroom",
+          "ItemClass": 1,
+          "Avg": 0.6,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
     }
   }
 ]

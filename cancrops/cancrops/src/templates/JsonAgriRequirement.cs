@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace cancrops.src.templates
 {
-    public class AgriRequirement
+    public class JsonAgriRequirement
     {
         public int LightLevelType { get; set; }
         public int MinLight { get; set; }
         public int MaxLight { get; set; }
         public double LightToleranceFactor { get; set; }
-        public List<AgriBlockCondition> Conditions { get; set; }
+        public List<JsonAgriBlockCondition> Conditions { get; set; }
     }
 }

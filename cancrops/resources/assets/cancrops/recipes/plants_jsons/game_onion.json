@@ -7,5 +7,18 @@
   "spreadchance": 0.2,
   "seeddropchance": 1.0,
   "seeddropbonus": 0.0,
-  "allowSourceStage": 3
+  "allowSourceStage": 3,
+  "MinClipStage": 5,
+  "ClipRollbackStage": 2,
+  "Clip_products": {
+    "Products": [
+      {
+        "CollectibleCode": "game:seeds-onion",
+        "ItemClass": 1,
+        "Avg": 0.5,
+        "Var": 0.3,
+        "LastDrop": false
+      }
+    ]
+  }
 }

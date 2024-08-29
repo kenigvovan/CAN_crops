@@ -1,5 +1,5 @@
 ﻿using cancrops.src.blockenities;
-using cancrops.src.templates;
+using cancrops.src.implementations;
 using cancrops.src.utility;
 using System;
 using System.Collections.Generic;
@@ -149,8 +149,8 @@ namespace cancrops.src.genetics
                 return l.Count > 0 ? l[0] : IAgriMutation.ConditionResult.PASS;
             }*/
             protected int sortAndShuffle(AgriMutation a, AgriMutation b, Random random)
-            {
-                return random.Next(1) > 0 ? -1 : 1;
+            {               
+                return random.Next(2) > 0 ? -1 : 1;
             }
 
             /*protected AgriPlant evaluate(Tuple<IAgriMutation, IAgriMutation.ConditionResult> mutation, Random random)

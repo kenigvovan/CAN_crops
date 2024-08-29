@@ -2,6 +2,7 @@
 using cancrops.src.blocks;
 using cancrops.src.commands;
 using cancrops.src.genetics;
+using cancrops.src.implementations;
 using cancrops.src.items;
 using cancrops.src.templates;
 using cancrops.src.utility;
@@ -38,13 +39,9 @@ namespace cancrops.src
         public override void Start(ICoreAPI api)
         {
             base.Start(api);
-
-            //api.RegisterBlockClass("CANBlockCrop", typeof(CANBlockCrop));
-
             //Items
-            //api.RegisterItemClass("CANItemPlantableSeed", typeof(CANItemPlantableSeed));
             api.RegisterItemClass("CANItemSelectionSticks", typeof(CANItemSelectionSticks));
-            //api.RegisterItemClass("CANItemHoe", typeof(CANItemHoe));
+            api.RegisterItemClass("CANItemHandCultivator", typeof(CANItemHandCultivator));
 
             //Blocks
             api.RegisterBlockClass("CANBlockFarmland", typeof(CANBlockFarmland));
@@ -59,21 +56,16 @@ namespace cancrops.src
             //SEEDS
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.ItemPlantableSeed).GetMethod("OnHeldInteractStart"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_ItemPlantableSeed_OnHeldInteractStart")));
 
-
-           // Harmony.ReversePatch(typeof(Vintagestory.API.Common.Block).GetMethod("OnBlockInteractStart"), new HarmonyMethod(typeof(harmPatch).GetMethod("Stub_Block_OnBlockInteractStart")));
-            
-           // harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockFarmland).GetMethod("OnBlockInteractStart"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_BlockFarmland_OnBlockInteractStart")));
-
-            //harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("OnBlockInteractStart"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_OnBlockInteractStart")));
-
-           
-            
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("OnBlockBroken"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_OnBlockBroken")));
-            
+
+            harmonyInstance.Patch(typeof(Vintagestory.API.Common.Block).GetMethod("OnBlockBroken"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_Block_OnBlockBroken")));
+
             Harmony.ReversePatch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("OnBlockBroken"), new HarmonyMethod(typeof(harmPatch).GetMethod("Stub_Block_OnBlockBroken")));
 
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("GetDrops"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetDrops")));
-            
+
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("OnBlockInteractStart"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_BlockCrop_OnBlockInteractStart")));
+
             Harmony.ReversePatch(typeof(Block).GetMethod("GetDrops"), new HarmonyMethod(typeof(harmPatch).GetMethod("Stub_GetDrops")));
 
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("GetPlacedBlockInfo"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetPlacedBlockInfo")));
@@ -128,17 +120,15 @@ namespace cancrops.src
                 .RequiresPlayer()
                 .RequiresPrivilege(Privilege.controlserver)
                 .BeginSub("setstat")
-                    //.RequiresPrivilege(Privilege.chat)
                     .WithArgs(api.ChatCommands.Parsers.Word("statName"), api.ChatCommands.Parsers.Int("statVal"))
                     .HandleWith(SetStatsCommands.SetSeedStatCommand)
                  .EndSub();
 
-            //api.RegisterCommand("cancrops", "", "", onCommand, Privilege.controlserver);
             harmonyInstance = new Harmony(harmonyID);
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.ItemHoe).GetMethod("DoTill"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ItemHoe_DoTill")));
 
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.ItemPlantableSeed).GetMethod("OnLoaded"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_OnLoaded")));
-          
+           
             agriPlants = new AgriPlants();
             agriMutations = new AgriMutations();
             agriMutationHandler = new AgriMutationHandler();
@@ -162,30 +152,28 @@ namespace cancrops.src
             {
                 if (val.Value is JObject)
                 {
-                    var readPlant = val.Value.ToObject<AgriPlant>();
+                    JsonAgriPlant readPlant = val.Value.ToObject<JsonAgriPlant>();                   
                     if (readPlant.Enabled)
                     {
-                        //plants.addPlant(readPlant);
-                        if (agriPlants.addPlant(readPlant))
+                        AgriPlant aPlant = new AgriPlant(readPlant);
+                        if (agriPlants.addPlant(aPlant))
                         {
-                            api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}", readPlant.Id));
+                            api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}:{1}", aPlant.Domain, aPlant.Id));
                         }
                     }
                 }
+              
                 if (val.Value is JArray)
                 {
                     foreach (JToken token in (val.Value as JArray))
                     {
-                        var readPlant = token.ToObject<AgriPlant>();
-                        if(readPlant.Id.Contains("fieldmushroom"))
-                        {
-                            var c = 3;
-                        }
+                        JsonAgriPlant readPlant = token.ToObject<JsonAgriPlant>();
                         if (readPlant.Enabled)
                         {
-                            if(agriPlants.addPlant(readPlant))
+                            AgriPlant aPlant = new AgriPlant(readPlant);
+                            if (agriPlants.addPlant(aPlant))
                             {
-                                api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}:{1}", readPlant.Domain, readPlant.Id));
+                                api.Logger.VerboseDebug(string.Format("[cancrops] InitPlants::added {0}:{1}", aPlant.Domain, aPlant.Id));
                             }
                         }
                     }
@@ -201,13 +189,13 @@ namespace cancrops.src
             {
                 if (val.Value is JObject)
                 {
-                    var mutations = val.Value.ToObject<AgriMutation>();
-                    if (mutations.Enabled)
+                    JsonAgriMutation mutation = val.Value.ToObject<JsonAgriMutation>();
+                    if (mutation.Enabled)
                     {
-                        //plants.addPlant(readPlant);
-                        if (agriMutations.AddMutation(mutations))
+                        AgriMutation aMutation = new AgriMutation(mutation);
+                        if (agriMutations.AddMutation(aMutation))
                         {
-                            api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
+                            api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", aMutation.Child));
                         }
                     }
                 }
@@ -215,12 +203,13 @@ namespace cancrops.src
                 {
                     foreach (JToken token in (val.Value as JArray))
                     {
-                        var mutations = token.ToObject<AgriMutation>();
-                        if (mutations.Enabled)
+                        JsonAgriMutation mutation = token.ToObject<JsonAgriMutation>();
+                        if (mutation.Enabled)
                         {
-                            if (agriMutations.AddMutation(mutations))
+                            AgriMutation aMutation = new AgriMutation(mutation);
+                            if (agriMutations.AddMutation(aMutation))
                             {
-                                api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", mutations.Child));
+                                api.Logger.VerboseDebug(string.Format("[cancrops] InitMutations::added {0}", aMutation.Child));
                             }
                         }
                     }
@@ -275,7 +264,7 @@ namespace cancrops.src
             }
             catch (Exception e)
             {
-                api.Logger.Debug("[cancrops] " + this.Mod.Info.ModID + ".json" + " config not found.");
+                api.Logger.Debug("[cancrops] " + this.Mod.Info.ModID + ".json" + " config not found." + e);
             }
 
             cancrops.config = new Config();

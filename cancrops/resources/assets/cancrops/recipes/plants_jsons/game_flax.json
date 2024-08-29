@@ -7,5 +7,18 @@
   "spreadchance": 0.2,
   "seeddropchance": 1.0,
   "seeddropbonus": 0.0,
-  "allowSourceStage": 4
+  "allowSourceStage": 4,
+  "MinClipStage": 6,
+  "ClipRollbackStage": 2,
+  "Clip_products": {
+    "Products": [
+      {
+        "CollectibleCode": "game:seeds-flax",
+        "ItemClass": 1,
+        "Avg": 0.5,
+        "Var": 0.3,
+        "LastDrop": false
+      }
+    ]
+  }
 }

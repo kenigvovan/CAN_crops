@@ -3,7 +3,10 @@
 	"class": "BlockCrop",
 	"behaviors": [{"name": "Unstable"}],
 	"variantgroups": [
-		{ "loadFromProperties": "game:block/mushroom" },
+		{
+			"code": "mushroom",
+			"states": [ "fieldmushroom", "almondmushroom" ]
+		},
 		{
 			"code": "stage",
 			"states": [ "1", "2", "3", "4" ]

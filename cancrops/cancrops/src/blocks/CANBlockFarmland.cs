@@ -34,7 +34,6 @@ namespace cancrops.src.blocks
             this.wsys = api.ModLoader.GetModSystem<WeatherSystemBase>(true);
             this.roomreg = api.ModLoader.GetModSystem<RoomRegistry>(true);
         }
-
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(world, blockPos, byItemStack);
@@ -60,18 +59,26 @@ namespace cancrops.src.blocks
                 neighborBE.OnNeighbouropPlaced(facing.Opposite, neighborBE);
             }
         }
-
         public override bool CanAttachBlockAt(IBlockAccessor world, Block block, BlockPos pos, BlockFacing blockFace, Cuboidi attachmentArea = null)
         {
             return ((block is BlockCrop || block is BlockDeadCrop) && blockFace == BlockFacing.UP) || (!blockFace.IsHorizontal && base.CanAttachBlockAt(world, block, pos, blockFace, attachmentArea));
         }
-
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             CANBlockEntityFarmland befarmland = world.BlockAccessor.GetBlockEntity(blockSel.Position) as CANBlockEntityFarmland;
+            if(befarmland != null)
+            {
+                if(byPlayer.InventoryManager.ActiveHotbarSlot?.Itemstack?.Item?.Tool == EnumTool.Hoe)
+                {
+                    if(befarmland.GetCropSticksVariant() != utility.EnumCropSticksVariant.NONE)
+                    {
+                        befarmland.OnHoeUsed();
+                        return true;
+                    }
+                }
+            }
             return (befarmland != null && befarmland.OnBlockInteract(byPlayer)) || base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
-
         public override string GetPlacedBlockName(IWorldAccessor world, BlockPos pos)
         {
             CANBlockEntityFarmland befarmland = world.BlockAccessor.GetBlockEntity(pos) as CANBlockEntityFarmland;
@@ -81,8 +88,7 @@ namespace cancrops.src.blocks
             }
             return base.GetPlacedBlockName(world, pos);
         }
-
-        public override int GetHeatRetention(BlockPos pos, BlockFacing facing)
+        public override int GetRetention(BlockPos pos, BlockFacing facing, EnumRetentionType type)
         {
             return 3;
         }
@@ -100,21 +106,9 @@ namespace cancrops.src.blocks
                 blockEntityFarmland.OnNeighbourBroken(facing.Opposite);
             }
         }
-
         public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
         {
             base.OnNeighbourBlockChange(world, pos, neibpos);
         }
-        public CodeAndChance[] WeedNames;
-
-        public int DelayGrowthBelowSunLight = 19;
-
-        public float LossPerLevel = 0.1f;
-
-        public float TotalWeedChance;
-
-        public WeatherSystemBase wsys;
-
-        public RoomRegistry roomreg;
     }
 }

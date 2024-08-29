@@ -54,6 +54,15 @@ namespace weightmod.src
 
         };
         public Dictionary<string, string> gene_color_int = new Dictionary<string, string>();
-        
+        public int weedMinimumSpreadStage = 1;
+        public double weedResistanceByStat = 0.05;
+        public Dictionary<int, double> weedSpreadChancePerStage = new Dictionary<int, double>{
+            { 0, 0.1 },
+            { 1, 0.3 },
+            { 2, 0.5 }
+        };
+        public bool weedSpreadingActivated = true;
+        public double weedAppearanceChance = 0.06;
+
     }
 }

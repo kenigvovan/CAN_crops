@@ -1,0 +1,78 @@
+[
+  {
+    "ingredient": {
+      "type": "item",
+      "code": "game:ingot-*",
+      "name": "metal",
+      "allowedVariants": [ "bismuthbronze", "tinbronze", "blackbronze", "iron", "meteoriciron", "steel", "gold", "copper" ]
+    },
+    "pattern": [
+      [
+        "_#__#__#_",
+        "_#__#__#_",
+        "__#####__",
+        "____#____",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________"
+      ],
+      [
+        "_#__#__#_",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________"
+      ]
+    ],
+    "name": "handcultivatorhead",
+    "output": {
+      "type": "item",
+      "code": "cancrops:handcultivatorhead-{metal}",
+      "quantity": 1
+    }
+  },
+  {
+    "ingredient": {
+      "type": "item",
+      "code": "game:ingot-*",
+      "name": "metal",
+      "allowedVariants": [ "bismuthbronze", "tinbronze", "blackbronze", "iron", "meteoriciron", "steel", "gold", "copper" ]
+    },
+    "pattern": [
+      [
+        "_#__#__#_",
+        "_#__#__#_",
+        "__#####__",
+        "____#____",
+        "_________",
+        "____#____",
+        "__#####__",
+        "_#__#__#_",
+        "_#__#__#_"
+      ],
+      [
+        "_#__#__#_",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_________",
+        "_#__#__#_"
+      ]
+    ],
+    "name": "handcultivatorhead2",
+    "output": {
+      "type": "item",
+      "code": "cancrops:handcultivatorhead-{metal}",
+      "quantity": 2
+    }
+  }
+]

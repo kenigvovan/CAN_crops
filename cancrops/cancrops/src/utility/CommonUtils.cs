@@ -1,6 +1,6 @@
 ﻿
 using cancrops.src.genetics;
-using cancrops.src.templates;
+using cancrops.src.implementations;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
