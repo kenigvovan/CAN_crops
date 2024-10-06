@@ -1,0 +1,266 @@
+[
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "beet",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 4,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-beet",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "cauliflower",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 9,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-cauliflower",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "corn",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 4,
+    "ClipRollbackStage": 7,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-corn",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "eggplant",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 5,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-eggplant",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "jalapeno",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 6,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-jalapeno",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "potato",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 6,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-potato",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "sugarcane",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 6,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-sugarcane",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "yam",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 7,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-yam",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "pepperbell",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 9,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-pepperbell",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "sugarbeet",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 4,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-sugarbeet",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "morecrops",
+    "id": "oat",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 6,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "morecrops:seeds-oat",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  }
+]

@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Reference Include="FarmlandDropsSoil">
-      <HintPath>..\..\..\..\..\..\Desktop\FarmlandDropsSoil.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Desktop\for_vs_libs\FarmlandDropsSoil.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="primitivesurvival">
