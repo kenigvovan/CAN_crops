@@ -1,29 +1,42 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Datastructures;
 
 namespace cancrops.src.genetics
 {
+    // Represents a complete set of genetic information for a crop plant.
+    // Contains 6 genes that control different aspects of the crop's behavior:
+    // - Gain: Amount of drops when harvested
+    // - Growth: Speed of growth (reduces time between stages)
+    // - Strength: Affects perish time of harvested items
+    // - Resistance: Temperature tolerance and weed resistance
+    // - Fertility: Probability of being selected as a parent during breeding
+    // - Mutativity: Chance of genetic mutations during breeding
     public class Genome: IEnumerable<Gene>
     {
-        public static Dictionary<string, bool> genes = new Dictionary<string, bool>{ 
-            //grow speed
-                {"gain", cancrops.config.hiddenGain}, 
-            //amount of drop
-                {"growth", cancrops.config.hiddenGrowth},
-            //resist against requirements
-                {"strength", cancrops.config.hiddenStrength},
-            //against weeds
-                {"resistance", cancrops.config.hiddenResistance},  
-            //chance to be selected from parents
-                {"fertility", cancrops.config.hiddenFertility},
-            //
-                {"mutativity", cancrops.config.hiddenMutativity}
-        };        
+        // Lazy initialization to avoid static initialization order issues
+        // This dictionary tracks which genes should be hidden in the UI
+        private static Dictionary<string, bool> _genes;
+        public static Dictionary<string, bool> genes
+        {
+            get
+            {
+                if (_genes == null)
+                {
+                    _genes = new Dictionary<string, bool>
+                    {
+                        {"gain", cancrops.config?.hiddenGain ?? false},
+                        {"growth", cancrops.config?.hiddenGrowth ?? false},
+                        {"strength", cancrops.config?.hiddenStrength ?? false},
+                        {"resistance", cancrops.config?.hiddenResistance ?? false},
+                        {"fertility", cancrops.config?.hiddenFertility ?? true},
+                        {"mutativity", cancrops.config?.hiddenMutativity ?? true}
+                    };
+                }
+                return _genes;
+            }
+        }        
         public Gene Gain { get; set; }
         public Gene Growth { get; set; }
         public Gene Strength { get; set; }

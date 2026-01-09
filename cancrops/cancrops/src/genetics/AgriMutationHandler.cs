@@ -198,7 +198,7 @@ namespace cancrops.src.genetics
                     {
                         return new Allele(1);
                     }
-                    else if (newValue > 10) //TODO add dict with max values
+                    else if (newValue > 10) // Cap at maximum value (should use config max)
                     {
                         return new Allele(10);
                     }

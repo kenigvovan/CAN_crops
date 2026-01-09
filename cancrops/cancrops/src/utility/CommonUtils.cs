@@ -87,8 +87,8 @@ namespace cancrops.src.utility
                         Dvalue += geneValues.Dominant.Value;
                         Rvalue += geneValues.Recessive.Value;
                     }
-                    Dvalue = (int)Math.Round((double)Dvalue / genomeList.Count);
-                    Rvalue = (int)Math.Round((double)Rvalue / genomeList.Count);
+					Dvalue = (int)Math.Round((double)Dvalue / genomeList.Count, MidpointRounding.AwayFromZero);
+					Rvalue = (int)Math.Round((double)Rvalue / genomeList.Count, MidpointRounding.AwayFromZero);
                     newGenome.SetGene(geneName, new Gene(geneName, new Allele(Dvalue), new Allele(Rvalue)));
                 }
                 genome = newGenome;
@@ -107,7 +107,7 @@ namespace cancrops.src.utility
                         {
                             Dvalue = geneValues.Dominant.Value;
                         }
-                        if (Rvalue == -1 || geneValues.Dominant.Value < Rvalue)
+                        if (Rvalue == -1 || geneValues.Recessive.Value < Rvalue)
                         {
                             Rvalue = geneValues.Recessive.Value;
                         }

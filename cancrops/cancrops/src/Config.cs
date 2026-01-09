@@ -14,7 +14,7 @@ namespace cancrops.src
         public bool hiddenGrowth = false;
         public int minStrength = 0;
         public int maxStrength = 10;
-        public bool hiddenStrength = true;
+        public bool hiddenStrength = false;
         public int minResistance = 0;
         public int maxResistance = 10;
         public bool hiddenResistance = false;
@@ -57,7 +57,15 @@ namespace cancrops.src
         };
         public bool weedSpreadingActivated = true;
         public double weedAppearanceChance = 0.15;
-        public Dictionary<string, bool> hidden_genes = new();
+        public Dictionary<string, bool> hidden_genes = new Dictionary<string, bool>
+        {
+            {"gain", false},
+            {"growth", false},
+            {"strength", false},
+            {"resistance", false},
+            {"fertility", true},
+            {"mutativity", true}
+        };
         public string seedMergeStrategy = "tolower";
         public HashSet<string> seedMergeStrategies = ["tolower", "mean"];
         public Dictionary<string, double> weedBlockCodes = new() {
