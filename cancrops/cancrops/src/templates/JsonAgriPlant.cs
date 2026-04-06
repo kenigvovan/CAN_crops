@@ -1,14 +1,5 @@
-﻿using ProtoBuf.Meta;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Vintagestory.API.Common;
+﻿using System;
 using cancrops.src.utility;
-using cancrops.src.templates;
-using Vintagestory.Common;
-using cancrops.src.implementations;
 
 namespace cancrops.src.templates
 {
