@@ -170,45 +170,23 @@ namespace cancrops.src.genetics
             }*/
         }
 
-        // Default AgriCraft stat mutation logic
+        // Stat mutation logic used during cloning
         public class AgriStatMutator
         {
             public AgriStatMutator() { }
 
-
-            public Gene pickOrMutate(Gene gene, Tuple<Genome, Genome>  parents, Random random)
+            public Gene pickOrMutate(Gene gene, Tuple<Genome, Genome> parents, Random random)
             {
-                // return new gene pair with or without mutations, based on mutativity stat
+                int mutativityA = parents.Item1.Mutativity.Dominant.Value;
+                int mutativityB = parents.Item2.Mutativity.Recessive.Value;
+
+                int d = MutationUtils.MutateAllele(gene.Dominant.Value, mutativityA, random);
+                int r = MutationUtils.MutateAllele(gene.Recessive.Value, mutativityB, random);
+
+                // Reorder: higher becomes Dominant
                 return new Gene(gene.StatName,
-                        this.rollAndExecuteMutation(gene, parents.Item1.Mutativity.Dominant.Value , random),
-                        this.rollAndExecuteMutation(gene, parents.Item2.Mutativity.Recessive.Value, random)
-                );
-            }
-
-            protected Allele rollAndExecuteMutation(Gene gene, int statValue, Random random)
-            {
-                // Mutativity stat of 1 results in 25/50/25 probability of positive/no/negative mutation
-                // Mutativity stat of 10 results in 100/0/0 probability of positive/no/negative mutation
-                int max = cancrops.config.maxMutativity;
-                if (random.Next(max) < statValue)
-                {
-                    int delta = random.Next(max) < (max + statValue) / 2 ? 1 : -1;
-                    int newValue = delta + gene.Dominant.Value;
-                    if (newValue <= 0)
-                    {
-                        return new Allele(1);
-                    }
-                    else if (newValue > max)
-                    {
-                        return new Allele(max);
-                    }
-                    return new Allele(newValue);
-                    //return new Allele(gene.Dominant.Value + delta);
-                }
-                else
-                {
-                    return new Allele(gene.Dominant.Value);
-                }
+                    new Allele(Math.Max(d, r)),
+                    new Allele(Math.Min(d, r)));
             }
         }
     }

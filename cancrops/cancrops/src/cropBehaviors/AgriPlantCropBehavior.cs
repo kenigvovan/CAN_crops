@@ -61,7 +61,7 @@ namespace cancrops.src.cropBehaviors
                 {
                     return false;
                 }
-                bool res = AgriPlantRequirmentChecker.CheckAgriPlantRequirements(beCrop);
+                bool res = AgriPlantRequirementChecker.CheckAgriPlantRequirements(beCrop);
                 if(!res)
                 {
                     handling = EnumHandling.PreventDefault;                   

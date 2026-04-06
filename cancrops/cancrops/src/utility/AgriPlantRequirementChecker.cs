@@ -5,7 +5,7 @@ using Vintagestory.API.MathTools;
 
 namespace cancrops.src.utility
 {
-    public class AgriPlantRequirmentChecker
+    public class AgriPlantRequirementChecker
     {
         public static bool CheckAgriPlantRequirements(CANBECrop beCrop)
         {
