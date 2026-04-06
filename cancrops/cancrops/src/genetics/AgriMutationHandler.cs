@@ -198,9 +198,9 @@ namespace cancrops.src.genetics
                     {
                         return new Allele(1);
                     }
-                    else if (newValue > 10) // Cap at maximum value (should use config max)
+                    else if (newValue > max)
                     {
-                        return new Allele(10);
+                        return new Allele(max);
                     }
                     return new Allele(newValue);
                     //return new Allele(gene.Dominant.Value + delta);

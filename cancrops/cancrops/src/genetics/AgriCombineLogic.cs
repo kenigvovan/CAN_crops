@@ -20,22 +20,12 @@ namespace cancrops.src.genetics
             var secondGenome = parents.Item2.GetEnumerator();
             firstGenome.MoveNext();
             secondGenome.MoveNext();
-            //really why tuple used even deeper
             do
             {
                 geneList.Add(mutateGene(firstGenome.Current, parents, random));
             }
             while (firstGenome.MoveNext() && secondGenome.MoveNext());
-            
-            foreach(var gen1 in parents.Item1)
-            {
-                foreach(var gen2 in parents.Item2)
-                {
-                    geneList.Add(mutateGene(gen1, parents, random));
-                    
-                    break;
-                }
-            }
+
             return new Genome(geneList);
         }
         // Creates a new gene by combining genetic material from both parents.
@@ -71,9 +61,9 @@ namespace cancrops.src.genetics
                 {
                     return new Allele(1);
                 }
-                else if(newValue > 10) // Cap at maximum value (should use config max)
+                else if(newValue > max)
                 {
-                    return new Allele(10);
+                    return new Allele(max);
                 }
                 return new Allele(allele.Value + delta);
             }
