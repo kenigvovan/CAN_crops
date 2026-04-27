@@ -19,7 +19,19 @@ namespace cancrops.src.BE
         private ICoreClientAPI capi;
         public static Random rand = new Random();
         private MeshData ownMesh;
-        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
+        private static readonly Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>
+        {
+            ["e1"] = new AssetLocation("cancrops:block/e1.png"),
+            ["e2"] = new AssetLocation("cancrops:block/e2.png"),
+            ["e3"] = new AssetLocation("cancrops:block/e3.png"),
+            ["e4"] = new AssetLocation("cancrops:block/e4.png"),
+            ["e5"] = new AssetLocation("cancrops:block/e5.png"),
+            ["s1"] = new AssetLocation("cancrops:block/s1.png"),
+            ["s2"] = new AssetLocation("cancrops:block/s2.png"),
+            ["s3"] = new AssetLocation("cancrops:block/s3.png"),
+            ["s4"] = new AssetLocation("cancrops:block/s4.png"),
+            ["s5"] = new AssetLocation("cancrops:block/s5.png"),
+        };
         public Size2i AtlasSize => this.capi.BlockTextureAtlas.Size;
         public TextureAtlasPosition this[string textureCode]
         {
@@ -71,17 +83,6 @@ namespace cancrops.src.BE
             {
                 this.capi = (api as ICoreClientAPI);
             }
-            tmpAssets["e1"] = new AssetLocation("cancrops:block/e1.png");
-            tmpAssets["e2"] = new AssetLocation("cancrops:block/e2.png");
-            tmpAssets["e3"] = new AssetLocation("cancrops:block/e3.png");
-            tmpAssets["e4"] = new AssetLocation("cancrops:block/e4.png");
-            tmpAssets["e5"] = new AssetLocation("cancrops:block/e5.png");
-
-            tmpAssets["s1"] = new AssetLocation("cancrops:block/s1.png");
-            tmpAssets["s2"] = new AssetLocation("cancrops:block/s2.png");
-            tmpAssets["s3"] = new AssetLocation("cancrops:block/s3.png");
-            tmpAssets["s4"] = new AssetLocation("cancrops:block/s4.png");
-            tmpAssets["s5"] = new AssetLocation("cancrops:block/s5.png");
             if (capi != null)
             {
                 this.ownMesh = GenRightMesh();
@@ -276,8 +277,18 @@ namespace cancrops.src.BE
                     foreach (Gene gene in Genome)
                     {
                         ITreeAttribute geneTree = new TreeAttribute();
-                        geneTree.SetInt("D", Math.Max(0, Math.Min((rand.Next(0, 2) * 2 -1) * rand.Next(mutativityStat) + rand.Next(fertilityStat) + gene.Dominant.Value, gene.Dominant.Value)));
-                        geneTree.SetInt("R", Math.Max(0, Math.Min((rand.Next(0, 2) * 2 - 1) * rand.Next(mutativityStat) + rand.Next(fertilityStat) + gene.Recessive.Value, gene.Recessive.Value)));
+                        int maxStat = gene.StatName switch
+                        {
+                            "gain" => cancrops.config.maxGain,
+                            "growth" => cancrops.config.maxGrowth,
+                            "strength" => cancrops.config.maxStrength,
+                            "resistance" => cancrops.config.maxResistance,
+                            "fertility" => cancrops.config.maxFertility,
+                            "mutativity" => cancrops.config.maxMutativity,
+                            _ => gene.Dominant.Value
+                        };
+                        geneTree.SetInt("D", Math.Clamp(gene.Dominant.Value + RollClipDelta(mutativityStat, fertilityStat), 0, maxStat));
+                        geneTree.SetInt("R", Math.Clamp(gene.Recessive.Value + RollClipDelta(mutativityStat, fertilityStat), 0, maxStat));
                         genomeTree[gene.StatName] = geneTree;
                     }
                     drop.Attributes[cancrops.config.genome_tag] = genomeTree;
@@ -286,6 +297,13 @@ namespace cancrops.src.BE
             }
             clipTool.Collectible.DamageItem(this.Api.World, byPlayer.Entity, clipSlot, 1);
             return true;
+        }
+        private static int RollClipDelta(int mutativityStat, int fertilityStat)
+        {
+            int sign = rand.Next(0, 2) * 2 - 1;
+            int mut = mutativityStat > 0 ? rand.Next(mutativityStat + 1) : 0;
+            int fert = fertilityStat > 0 ? rand.Next(fertilityStat + 1) : 0;
+            return sign * mut + fert;
         }
         public void OnCultivating(ItemSlot slot, EntityAgent byEntity)
         {

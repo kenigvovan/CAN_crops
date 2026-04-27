@@ -22,6 +22,7 @@ namespace cancrops.src.implementations
         public bool ClipSeedsHaveStats { get; set; }
         public int MinClipStage { get; set; }
         public int ClipRollbackStage { get; set; }
+        public float LightSensitivity { get; set; } = 1f;
         public AgriProductList Products { get; set; }
         public AgriProductList Clip_products { get; set; }
         public AgriRequirement Requirement { get; set; }
@@ -46,6 +47,7 @@ namespace cancrops.src.implementations
             this.ClipSeedsHaveStats = jsonAgriPlant.ClipSeedsHaveStats;
             this.MinClipStage = jsonAgriPlant.MinClipStage;
             this.ClipRollbackStage = jsonAgriPlant.ClipRollbackStage;
+            this.LightSensitivity = jsonAgriPlant.LightSensitivity;
             if (jsonAgriPlant.Products != null)
             {
                 this.Products = new AgriProductList();

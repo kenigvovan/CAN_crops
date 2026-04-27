@@ -144,9 +144,10 @@ namespace cancrops.src
             agriMutationHandler = new AgriMutationHandler();
 
             PopulateRegistries(api);
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Cold")));
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Heat")));
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update")));
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Cold")));
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Heat")));
+           // harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update")));
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFastForwardGrowth).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFastForwardGrowth_Update_Light")));
             serverChannel = sapi.Network.RegisterChannel("cancrops");
             serverChannel.RegisterMessageType(typeof(ConfigUpdateValuesPacket));
             api.Event.PlayerJoin += SendUpdatedConfigValues;

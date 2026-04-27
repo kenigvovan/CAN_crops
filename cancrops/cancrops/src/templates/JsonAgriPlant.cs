@@ -19,6 +19,7 @@ namespace cancrops.src.templates
         public bool ClipSeedsHaveStats { get; set; }
         public int MinClipStage { get; set; }
         public int ClipRollbackStage { get; set; }
+        public float LightSensitivity { get; set; } = 1f;
         public JsonAgriProductList Products { get; set; }
         public JsonAgriProductList Clip_products { get; set; }
         public JsonAgriRequirement Requirement { get; set; }

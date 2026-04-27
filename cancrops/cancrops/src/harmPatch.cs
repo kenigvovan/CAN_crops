@@ -18,7 +18,7 @@ namespace cancrops.src
     [HarmonyPatch]
     public class harmPatch
     {
-        public static bool Prefix_ItemPlantableSeed_OnCreatedByCrafting(CollectibleObject __instance, ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe byRecipe)
+        public static bool Prefix_ItemPlantableSeed_OnCreatedByCrafting(CollectibleObject __instance, ItemSlot[] allInputSlots, ItemSlot outputSlot, GridRecipe byRecipe)
         {
             if(__instance is not ItemPlantableSeed)
             {
@@ -26,7 +26,7 @@ namespace cancrops.src
             }
             bool skip = true;
             var slots = new List<Genome>();
-            foreach (var it in allInputslots)
+            foreach (var it in allInputSlots)
             {
                 if (!it.Empty && it.Itemstack.Attributes != null && it.Itemstack.Attributes.HasAttribute("genome"))
                 {
@@ -186,6 +186,45 @@ namespace cancrops.src
                 }
             }
             return 1f;
+        }
+        public static double AdjustLightFactor(double original, BlockEntityFastForwardGrowth ffg)
+        {
+            if (original >= 1.0) return original;
+            if (ffg.Api.World.BlockAccessor.GetBlockEntity<CANBECrop>(ffg.Pos.UpCopy()) is CANBECrop be
+                && be.agriPlant != null)
+            {
+                return 1.0 - (1.0 - original) * be.agriPlant.LightSensitivity;
+            }
+            return original;
+        }
+        public static IEnumerable<CodeInstruction> Transpiler_BlockEntityFastForwardGrowth_Update_Light(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            bool found = false;
+            var helper = AccessTools.Method(typeof(harmPatch), nameof(harmPatch.AdjustLightFactor));
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!found
+                    && i + 2 < codes.Count
+                    && codes[i].opcode == OpCodes.Call
+                    && codes[i].operand is MethodInfo mi
+                    && mi.Name == "Clamp"
+                    && mi.DeclaringType == typeof(Vintagestory.API.MathTools.GameMath)
+                    && codes[i + 1].opcode == OpCodes.Conv_R8
+                    && codes[i + 2].opcode == OpCodes.Stloc_S)
+                {
+                    yield return codes[i];
+                    yield return codes[i + 1];
+                    yield return new CodeInstruction(OpCodes.Ldarg_0);
+                    yield return new CodeInstruction(OpCodes.Call, helper);
+                    yield return codes[i + 2];
+                    i += 2;
+                    found = true;
+                    continue;
+                }
+                yield return codes[i];
+            }
         }
         public static IEnumerable<CodeInstruction> Transpiler_BlockEntityFarmland_Update_Heat(IEnumerable<CodeInstruction> instructions)
         {
