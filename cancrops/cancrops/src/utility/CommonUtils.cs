@@ -30,51 +30,46 @@ namespace cancrops.src.utility
         public static Genome GetSeedGenomeFromAttribute(ItemStack seedStack)
         {
             ITreeAttribute genomeTree = seedStack.Attributes.GetTreeAttribute(cancrops.config.genome_tag);
+            AgriPlant fallbackPlant = ResolvePlantFromSeedStack(seedStack);
+
             if (genomeTree == null)
             {
-                //return default genome
-                return new Genome();
+                var fresh = new Genome();
+                if (fallbackPlant != null) fresh.SetSpecies(fallbackPlant);
+                return fresh;
             }
-            else
-            {
-                List<Gene> genes = new List<Gene>();
-                foreach (var it in Genome.genes)
-                {
-                    ITreeAttribute geneTree = genomeTree.GetTreeAttribute(it.Key);
-                    genes.Add(new Gene(it.Key, new Allele(geneTree.GetInt("D")), new Allele(geneTree.GetInt("R"))));
-                }
-                return new Genome(genes);
-            }
+
+            var genome = Genome.FromTreeAttribute(genomeTree, fallbackPlant);
+            return genome ?? new Genome();
+        }
+
+        private static AgriPlant ResolvePlantFromSeedStack(ItemStack seedStack)
+        {
+            string lastPart = seedStack?.Collectible?.LastCodePart();
+            string domain = seedStack?.Collectible?.Code?.Domain;
+            if (string.IsNullOrEmpty(lastPart) || string.IsNullOrEmpty(domain)) return null;
+            return cancrops.GetPlants()?.getPlant(domain + ":" + lastPart);
         }
         public static ItemStack GetSeedItemStackFromFarmland(Genome genome, AgriPlant agriPlant)
         {
             ItemStack stack = new ItemStack(cancrops.sapi.World.GetItem(new AssetLocation(agriPlant.Domain + ":seeds-" + agriPlant.Id)), 1);
-            ITreeAttribute genomeTree = new TreeAttribute();
-            foreach (Gene gene in genome)
-            {
-                ITreeAttribute geneTree = new TreeAttribute();
-                geneTree.SetInt("D", gene.Dominant.Value);
-                geneTree.SetInt("R", gene.Recessive.Value);
-                genomeTree[gene.StatName] = geneTree;
-            }
-            stack.Attributes[cancrops.config.genome_tag] = genomeTree;
+            // Use the new-format serialiser so all registered genes (including species pairs)
+            // are preserved. Iterating "foreach Gene in genome" would drop everything but ints.
+            stack.Attributes[cancrops.config.genome_tag] = genome.AsTreeAttribute();
             return stack;
         }
         public static void ApplyGenomeTreeToItemstack(Genome genome, ItemStack itemStack)
         {
-            ITreeAttribute genomeTree = new TreeAttribute();
-            foreach (Gene gene in genome)
-            {
-                ITreeAttribute geneTree = new TreeAttribute();
-                geneTree.SetInt("D", gene.Dominant.Value);
-                geneTree.SetInt("R", gene.Recessive.Value);
-                genomeTree[gene.StatName] = geneTree;
-            }
-            itemStack.Attributes[cancrops.config.genome_tag] = genomeTree;
+            itemStack.Attributes[cancrops.config.genome_tag] = genome.AsTreeAttribute();
         }
         internal static bool MergeGenomesInnerMean(List<Genome> genomeList, out Genome genome)
         {
             Genome newGenome = new Genome();
+            // Carry the first parent's species into the merged result; stat merge below only handles ints.
+            if (genomeList != null && genomeList.Count > 0 && genomeList[0]?.Species != null)
+            {
+                newGenome.SetSpecies(genomeList[0].Species);
+            }
             if(cancrops.config.seedMergeStrategy == "mean")
             {
                 foreach (var geneName in Genome.genes.Keys)

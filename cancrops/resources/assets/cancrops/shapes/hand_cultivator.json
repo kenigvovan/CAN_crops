@@ -8,8 +8,8 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"blade": "game:item/tool/material/handle",
-		"generic": "game:item/tool/material/handle"
+		"blade": "game:item/tool/handle",
+		"generic": "game:item/tool/handle"
 	},
 	"elements": [
 		{

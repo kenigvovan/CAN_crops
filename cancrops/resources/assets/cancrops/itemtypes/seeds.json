@@ -6,7 +6,7 @@
 	"variantgroups": [
 		{
 			"code": "type",
-			"states": [ "fieldmushroom", "almondmushroom" ]
+			"states": [ "fieldmushroom", "almondmushroom", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap" ]
 		}
 	],
 	"shape": { "base": "game:item/resource/seeds/seedbag" },
@@ -16,7 +16,11 @@
 		"cancrops": ["*"]
 	},
 	"texturesByType": {
-		"*": { "seed": { "base": "cancrops:items/resource/seeds/{type}" } }
+		"*-fieldmushroom":  { "seed": { "base": "cancrops:items/resource/seeds/fieldmushroom" } },
+		"*-almondmushroom": { "seed": { "base": "cancrops:items/resource/seeds/almondmushroom" } },
+		"*-redwinecap":     { "seed": { "base": "cancrops:items/resource/seeds/redwinecap" } },
+		"*-flyagaric":      { "seed": { "base": "game:block/plant/mushroom/flyagariccap" } },
+		"*": { "seed": { "base": "game:block/plant/mushroom/{type}" } }
 	},
 	"materialDensity": 450,
 	"guiTransform": {

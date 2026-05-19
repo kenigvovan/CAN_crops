@@ -8,9 +8,9 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"cap": "game:block/plant/mushroom/fieldmushroom/cap",
-		"stipe": "game:block/plant/mushroom/fieldmushroom/stipe",
-		"pores": "game:block/plant/mushroom/fieldmushroom/pores"
+		"cap": "game:block/plant/mushroom/fieldmushroomcap",
+		"stipe": "game:block/plant/mushroom/fieldmushroomstipe",
+		"pores": "game:block/plant/mushroom/fieldmushroompores"
 	},
 	"elements": [
 		{

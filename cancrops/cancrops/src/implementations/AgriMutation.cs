@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using cancrops.src.genetics.conditions;
 using cancrops.src.templates;
 
 namespace cancrops.src.implementations
@@ -9,6 +11,7 @@ namespace cancrops.src.implementations
         public string Child { get; set; }
         public string Parent1 { get; set; }
         public string Parent2 { get; set; }
+        public List<IMutationCondition> Conditions { get; set; } = new List<IMutationCondition>();
         public AgriMutation()
         {
 
@@ -19,6 +22,14 @@ namespace cancrops.src.implementations
             this.Child = jsonAgriMutation.Child;
             this.Parent1 = jsonAgriMutation.Parent1;
             this.Parent2 = jsonAgriMutation.Parent2;
+            if (jsonAgriMutation.Conditions != null)
+            {
+                foreach (var json in jsonAgriMutation.Conditions)
+                {
+                    var cond = ConditionRegistry.Build(json);
+                    if (cond != null) this.Conditions.Add(cond);
+                }
+            }
         }
         public bool isChild(string child)
         {

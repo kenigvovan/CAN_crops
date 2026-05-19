@@ -42,5 +42,85 @@
         "parent1": "cancrops:almondmushroom",
         "parent2": "cancrops:almondmushroom",
         "conditions": []
-    }
+    },
+
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.75,
+        "child": "cancrops:chanterelle",
+        "parent1": "cancrops:chanterelle",
+        "parent2": "cancrops:chanterelle",
+        "conditions": []
+    },
+
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.75,
+        "child": "cancrops:kingbolete",
+        "parent1": "cancrops:kingbolete",
+        "parent2": "cancrops:kingbolete",
+        "conditions": []
+    },
+
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.05,
+        "child": "cancrops:commonmorel",
+        "parent1": "cancrops:chanterelle",
+        "parent2": "cancrops:almondmushroom",
+        "conditions": [
+            { "type": "climate", "minTemp": -2, "maxTemp": 12, "minRain": 0.3, "maxRain": 1.0, "result": "PASS" }
+        ]
+    },
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.75,
+        "child": "cancrops:commonmorel",
+        "parent1": "cancrops:commonmorel",
+        "parent2": "cancrops:commonmorel",
+        "conditions": []
+    },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:bitterbolete",
+      "parent1": "cancrops:bitterbolete", "parent2": "cancrops:bitterbolete", "conditions": [] },
+
+  
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:redwinecap",
+      "parent1": "cancrops:redwinecap", "parent2": "cancrops:redwinecap", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.10, "child": "cancrops:paddystraw",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:almondmushroom",
+      "conditions": [ { "type": "climate", "minTemp": 18, "maxTemp": 35, "minRain": 0.5, "maxRain": 1.0, "result": "PASS" } ] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:paddystraw",
+      "parent1": "cancrops:paddystraw", "parent2": "cancrops:paddystraw", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:orangeoakbolete",
+      "parent1": "cancrops:orangeoakbolete", "parent2": "cancrops:orangeoakbolete", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:flyagaric",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:redwinecap",
+      "conditions": [ {
+          "type": "neighbour_block", "block": "game:log-placed-birch-ud", "amount": 1,
+          "minX": -3, "maxX": 3, "minY": -1, "maxY": 2, "minZ": -3, "maxZ": 3,
+          "result": "PASS"
+      } ] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:flyagaric",
+      "parent1": "cancrops:flyagaric", "parent2": "cancrops:flyagaric", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.08, "child": "cancrops:puffball",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:paddystraw",
+      "conditions": [ { "type": "climate", "minTemp": 8, "maxTemp": 28, "minRain": 0.0, "maxRain": 0.5, "result": "PASS" } ] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:puffball",
+      "parent1": "cancrops:puffball", "parent2": "cancrops:puffball", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:saffronmilkcap",
+      "parent1": "cancrops:saffronmilkcap", "parent2": "cancrops:saffronmilkcap", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:indigomilkcap",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:redwinecap",
+      "conditions": [ { "type": "climate", "minTemp": 0, "maxTemp": 14, "minRain": 0.4, "maxRain": 1.0, "result": "PASS" } ] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:indigomilkcap",
+      "parent1": "cancrops:indigomilkcap", "parent2": "cancrops:indigomilkcap", "conditions": [] }
 ]

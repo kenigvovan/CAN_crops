@@ -271,37 +271,43 @@ namespace cancrops.src.BE
             {
                 if (drop.Item is ItemPlantableSeed)
                 {
-                    ITreeAttribute genomeTree = new TreeAttribute();
-                    var fertilityStat = Genome.Fertility.Dominant.Value;
-                    var mutativityStat = Genome.Mutativity.Dominant.Value;
-                    foreach (Gene gene in Genome)
+                    // Clone the parent genome (includes species pair) and apply per-gene clip drift,
+                    // then serialise via the new-format writer so species recessivity survives.
+                    var clipGenome = Genome.Clone();
+                    int fertilityStat = clipGenome.Fertility?.Dominant?.Value ?? 0;
+                    int clipVariance = cancrops.config.statMutationStep;
+                    var statNames = new List<string>(Genome.genes.Keys);
+                    foreach (var statName in statNames)
                     {
-                        ITreeAttribute geneTree = new TreeAttribute();
-                        int maxStat = gene.StatName switch
+                        var current = clipGenome.GetGeneByName(statName);
+                        if (current == null) continue;
+                        int maxStat = statName switch
                         {
-                            "gain" => cancrops.config.maxGain,
-                            "growth" => cancrops.config.maxGrowth,
-                            "strength" => cancrops.config.maxStrength,
+                            "gain"       => cancrops.config.maxGain,
+                            "growth"     => cancrops.config.maxGrowth,
+                            "strength"   => cancrops.config.maxStrength,
                             "resistance" => cancrops.config.maxResistance,
-                            "fertility" => cancrops.config.maxFertility,
-                            "mutativity" => cancrops.config.maxMutativity,
-                            _ => gene.Dominant.Value
+                            "fertility"  => cancrops.config.maxFertility,
+                            _            => current.Dominant.Value
                         };
-                        geneTree.SetInt("D", Math.Clamp(gene.Dominant.Value + RollClipDelta(mutativityStat, fertilityStat), 0, maxStat));
-                        geneTree.SetInt("R", Math.Clamp(gene.Recessive.Value + RollClipDelta(mutativityStat, fertilityStat), 0, maxStat));
-                        genomeTree[gene.StatName] = geneTree;
+                        int newD = Math.Clamp(current.Dominant.Value + RollClipDelta(clipVariance, fertilityStat), 0, maxStat);
+                        int newR = Math.Clamp(current.Recessive.Value + RollClipDelta(clipVariance, fertilityStat), 0, maxStat);
+                        clipGenome.SetGene(statName, new Gene(statName, new Allele(newD), new Allele(newR)));
                     }
-                    drop.Attributes[cancrops.config.genome_tag] = genomeTree;
+                    drop.Attributes[cancrops.config.genome_tag] = clipGenome.AsTreeAttribute();
                 }
                 this.Api.World.SpawnItemEntity(drop, new Vec3d(this.Pos.X + 0.5, this.Pos.Y + 0.5, this.Pos.Z + 0.5));
             }
             clipTool.Collectible.DamageItem(this.Api.World, byPlayer.Entity, clipSlot, 1);
             return true;
         }
-        private static int RollClipDelta(int mutativityStat, int fertilityStat)
+        // Asymmetric on purpose: only the variance term is signed, fertility always pushes upward.
+        // The intent is "fertile plants give better clippings": you can lose up to `variance` but
+        // a fertile parent's clipping gets a one-sided bonus from `fertilityStat`.
+        private static int RollClipDelta(int variance, int fertilityStat)
         {
             int sign = rand.Next(0, 2) * 2 - 1;
-            int mut = mutativityStat > 0 ? rand.Next(mutativityStat + 1) : 0;
+            int mut = variance > 0 ? rand.Next(variance + 1) : 0;
             int fert = fertilityStat > 0 ? rand.Next(fertilityStat + 1) : 0;
             return sign * mut + fert;
         }
@@ -326,14 +332,15 @@ namespace cancrops.src.BE
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
             base.FromTreeAttributes(tree, worldForResolving);
-            if (tree.HasAttribute("genome"))
-            {
-                this.Genome = Genome.FromTreeAttribute(tree.GetTreeAttribute("genome"));
-            }
 
             if (tree.HasAttribute("plant"))
             {
                 this.agriPlant = cancrops.GetPlants()?.getPlant(tree.GetString("plant")) ?? null;
+            }
+
+            if (tree.HasAttribute("genome"))
+            {
+                this.Genome = Genome.FromTreeAttribute(tree.GetTreeAttribute("genome"), this.agriPlant);
             }
             bool regenerateMesh = false;
             WeedStage newWeedStage = (WeedStage)tree.GetInt("weedStage", 0);

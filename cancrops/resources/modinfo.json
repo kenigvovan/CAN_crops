@@ -5,7 +5,7 @@
     "authors": [ "KenigVovan" ],
     "contributors": [ "Andris" ],
     "description": "Crops selection.",
-    "version": "0.4.17",
+    "version": "0.5.0",
     "dependencies": {
         "game": ""
     }

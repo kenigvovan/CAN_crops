@@ -82,5 +82,185 @@
                 }
             ]
         }
+    },
+    {
+        "enabled": true,
+        "domain": "cancrops",
+        "id": "bolete",
+        "growthmultiplier": 1.0,
+        "AllowUnderGround": true,
+        "cloneable": true,
+        "AllowCloning": true,
+        "spreadchance": 0.25,
+        "seeddropchance": 1.0,
+        "seeddropbonus": 0.0,
+        "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": {
+            "LightLevelType": 2,
+            "MinLight": 0,
+            "MaxLight": 12,
+            "LightToleranceFactor": 0.4
+        },
+        "Clip_products": {
+            "Products": [
+                { "CollectibleCode": "cancrops:seeds-bolete", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+            ]
+        }
+    },
+    {
+        "enabled": true,
+        "domain": "cancrops",
+        "id": "chanterelle",
+        "growthmultiplier": 1.0,
+        "AllowUnderGround": true,
+        "cloneable": true,
+        "AllowCloning": true,
+        "spreadchance": 0.2,
+        "seeddropchance": 1.0,
+        "seeddropbonus": 0.0,
+        "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": {
+            "LightLevelType": 2,
+            "MinLight": 0,
+            "MaxLight": 11,
+            "LightToleranceFactor": 0.4
+        },
+        "Clip_products": {
+            "Products": [
+                { "CollectibleCode": "cancrops:seeds-chanterelle", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+            ]
+        }
+    },
+    {
+        "enabled": true,
+        "domain": "cancrops",
+        "id": "kingbolete",
+        "growthmultiplier": 0.85,
+        "AllowUnderGround": true,
+        "cloneable": true,
+        "AllowCloning": true,
+        "spreadchance": 0.12,
+        "seeddropchance": 1.0,
+        "seeddropbonus": 0.0,
+        "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": {
+            "LightLevelType": 2,
+            "MinLight": 0,
+            "MaxLight": 10,
+            "LightToleranceFactor": 0.3
+        },
+        "Clip_products": {
+            "Products": [
+                { "CollectibleCode": "cancrops:seeds-kingbolete", "ItemClass": 1, "Avg": 0.5, "Var": 0.3, "LastDrop": false }
+            ]
+        }
+    },
+    {
+        "enabled": true,
+        "domain": "cancrops",
+        "id": "commonmorel",
+        "growthmultiplier": 0.85,
+        "AllowUnderGround": true,
+        "cloneable": true,
+        "AllowCloning": true,
+        "spreadchance": 0.12,
+        "seeddropchance": 1.0,
+        "seeddropbonus": 0.0,
+        "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": {
+            "LightLevelType": 2,
+            "MinLight": 0,
+            "MaxLight": 10,
+            "LightToleranceFactor": 0.3
+        },
+        "Clip_products": {
+            "Products": [
+                { "CollectibleCode": "cancrops:seeds-commonmorel", "ItemClass": 1, "Avg": 0.5, "Var": 0.3, "LastDrop": false }
+            ]
+        }
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "bitterbolete", "growthmultiplier": 1.0,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.22, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 11, "LightToleranceFactor": 0.4 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-bitterbolete", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "redwinecap", "growthmultiplier": 1.0,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.22, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 12, "LightToleranceFactor": 0.4 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-redwinecap", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "paddystraw", "growthmultiplier": 1.1,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.28, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 14, "LightToleranceFactor": 0.5 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-paddystraw", "ItemClass": 1, "Avg": 0.7, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "orangeoakbolete", "growthmultiplier": 0.95,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.18, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 11, "LightToleranceFactor": 0.4 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-orangeoakbolete", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "flyagaric", "growthmultiplier": 0.85,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.10, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 12, "LightToleranceFactor": 0.4 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-flyagaric", "ItemClass": 1, "Avg": 0.5, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "puffball", "growthmultiplier": 1.0,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.18, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 14, "LightToleranceFactor": 0.5 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-puffball", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "saffronmilkcap", "growthmultiplier": 0.95,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.18, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 11, "LightToleranceFactor": 0.4 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-saffronmilkcap", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
+        ]}
+    },
+    {
+        "enabled": true, "domain": "cancrops", "id": "indigomilkcap", "growthmultiplier": 0.95,
+        "AllowUnderGround": true, "cloneable": true, "AllowCloning": true,
+        "spreadchance": 0.15, "seeddropchance": 1.0, "seeddropbonus": 0.0, "allowSourceStage": 3,
+        "lightSensitivity": 0.0,
+        "requirement": { "LightLevelType": 2, "MinLight": 0, "MaxLight": 10, "LightToleranceFactor": 0.3 },
+        "Clip_products": { "Products": [
+            { "CollectibleCode": "cancrops:seeds-indigomilkcap", "ItemClass": 1, "Avg": 0.5, "Var": 0.3, "LastDrop": false }
+        ]}
     }
 ]

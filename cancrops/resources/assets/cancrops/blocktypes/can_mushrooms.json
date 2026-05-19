@@ -5,7 +5,7 @@
 	"variantgroups": [
 		{
 			"code": "mushroom",
-			"states": [ "fieldmushroom", "almondmushroom" ]
+			"states": [ "fieldmushroom", "almondmushroom", "bolete", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap" ]
 		},
 		{
 			"code": "stage",
@@ -15,9 +15,11 @@
 	"creativeinventory": { "general": [""], "plants": [""] },
 	"renderpass": "OpaqueNoCull",
 	"shapeByType": {
+		"*-fieldmushroom-3":   { "base": "cancrops:block/plant/mushroom/fieldmushroom/normal2" },
+		"*-almondmushroom-3":  { "base": "cancrops:block/plant/mushroom/almondmushroom/normal2" },
 		"*-1": { "base": "game:block/plant/mushroom/{mushroom}/harvested*" },
 		"*-2": { "base": "game:block/plant/mushroom/{mushroom}/harvested*" },
-		"*-3": { "base": "cancrops:block/plant/mushroom/{mushroom}/normal2" },
+		"*-3": { "base": "game:block/plant/mushroom/{mushroom}/normal2" },
 		"*-4": { "base": "game:block/plant/mushroom/{mushroom}/normal*" }
 	},
 	"blockmaterial": "Plant",
@@ -69,6 +71,13 @@
 	},
 	"rainPermeable": false,
 	"dropsByType": {
+		"*-bolete-4": [
+			{
+				"type": "item",
+				"code": "cancrops:seeds-bolete",
+				"quantity": { "avg": 1 }
+			}
+		],
 		"*-4": [
 			{
 				"type": "item",

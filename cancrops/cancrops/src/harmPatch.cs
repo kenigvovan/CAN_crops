@@ -1,5 +1,8 @@
 ﻿using cancrops.src.BE;
 using cancrops.src.genetics;
+using cancrops.src.genetics.abstractions;
+using cancrops.src.genetics.genes;
+using cancrops.src.implementations;
 using cancrops.src.utility;
 using HarmonyLib;
 using System;
@@ -41,20 +44,6 @@ namespace cancrops.src
             CommonUtils.ApplyGenomeTreeToItemstack(genome, outputSlot.Itemstack);
             return skip;
         }
-        public static void Prefix_GetPlacedBlockInfo_New(Vintagestory.GameContent.BlockCrop __instance, IWorldAccessor world, BlockPos pos, IPlayer forPlayer, ref string __result)
-        {
-            if (world.BlockAccessor.GetBlockEntity<CANBECrop>(pos) is CANBECrop beCrop)
-            {
-                StringBuilder sb = new();
-                foreach (var gene in Genome.genes)
-                {
-                    if (gene.Value)
-                    {
-                        sb.Append(gene.Key + " " + gene.Value);
-                    }
-                }
-            }
-        }
         public static void Prefix_BlockEntityFarmland_GetDrops(Vintagestory.GameContent.BlockEntityFarmland __instance, ItemStack[] drops, ref ItemStack[] __result)
         {
             List<ItemStack> newDrops = RemoveDefaultSeeds(drops);
@@ -72,7 +61,7 @@ namespace cancrops.src
                 newDrops.Add(seed);
             }
 
-            int gain = beCrop.Genome.Gain.Dominant.Value;
+            int gain = beCrop.Genome?.Gain?.Dominant?.Value ?? 0;
             foreach (var it in newDrops)
             {
                 if (it.Item is ItemPlantableSeed)
@@ -113,12 +102,13 @@ namespace cancrops.src
                 }
                 if (beCrop.Genome != null)
                 {
+                    int growthValue = beCrop.Genome.Growth?.Dominant?.Value ?? 0;
                     __result =(double)(__instance.Api.World.Calendar.HoursPerDay * totalDays
                         / (float)block.CropProps.GrowthStages
                         * (1f / __instance.GetGrowthRate(block.CropProps.RequiredNutrient))
                         * (float)(0.9 + 0.2 * CANBECrop.rand.NextDouble())
                         / ___growthRateMul)
-                            * (1f - (beCrop.Genome.Growth.Dominant.Value * 0.05));
+                            * (1f - (growthValue * 0.05));
                     return false;
                 }
             }
@@ -137,9 +127,10 @@ namespace cancrops.src
         {
             if (farmland.Api.World.BlockAccessor.GetBlockEntity<CANBECrop>(farmland.Pos.UpCopy()) is CANBECrop beCrop)
             {
-                if (beCrop.Genome != null)
+                int resistance = beCrop.Genome?.Resistance?.Dominant?.Value ?? 0;
+                if (resistance > 0)
                 {
-                    return cancrops.config.coldResistanceByStat * beCrop.Genome.Resistance.Dominant.Value;
+                    return cancrops.config.coldResistanceByStat * resistance;
                 }
             }
             return 1f;
@@ -169,20 +160,10 @@ namespace cancrops.src
         {
             if (farmland.Api.World.BlockAccessor.GetBlockEntity<CANBECrop>(farmland.Pos.UpCopy()) is CANBECrop beCrop)
             {
-                if (beCrop.Genome != null)
+                int resistance = beCrop.Genome?.Resistance?.Dominant?.Value ?? 0;
+                if (resistance > 0)
                 {
-                    /*var field = typeof(BlockEntityFarmland).GetField(
-                        "totalHoursLastUpdate",
-                        BindingFlags.Instance | BindingFlags.NonPublic
-                    );
-                    double c2 = (double)(field.GetValue(farmland));
-                    var conds = farmland.Api.World.BlockAccessor.GetClimateAt(farmland.Pos, 
-                        EnumGetClimateMode.ForSuppliedDate_TemperatureRainfallOnly, c2 / farmland.Api.World.Calendar.HoursPerDay);
-                    if(conds.Temperature > 40)
-                    {
-                        var c = 3;
-                    }*/
-                    return cancrops.config.heatResistanceByStat * beCrop.Genome.Resistance.Dominant.Value;
+                    return cancrops.config.heatResistanceByStat * resistance;
                 }
             }
             return 1f;
@@ -301,46 +282,82 @@ namespace cancrops.src
         //////////////////////////////////////////////////////////////SEEEDS/////////////////////////////////////////////////////////////////////////////////
         public static void Postfix_ItemPlantableSeed_GetHeldItemInfo(Vintagestory.GameContent.ItemPlantableSeed __instance, ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo, ICoreAPI ___api)
         {
-            if (inSlot.Itemstack.Attributes.HasAttribute("genome"))
-            {
-                ITreeAttribute genomeTree = inSlot.Itemstack.Attributes.GetTreeAttribute("genome");
-                foreach (var gene in Genome.genes)
-                {
-                    ITreeAttribute geneTree = genomeTree.GetTreeAttribute(gene.Key);
-                    if(cancrops.config.hidden_genes.TryGetValue(gene.Key, out bool isHidden))
-                    {
-                        if (isHidden)
-                        {
-                            continue;
-                        }
-                    }
-                    dsc.Append("<font color=\"" + cancrops.config.gene_color_int[gene.Key] + "\">" + Lang.Get("cancrops:" + gene.Key + "-stat") + "</font>");
-                    dsc.Append(string.Format(": {0} ", geneTree.GetInt("D")));              
-                }
-                ITreeAttribute resistanceTree = genomeTree.GetTreeAttribute("resistance");
-                if(resistanceTree != null)
-                {
-                    Block block = world.GetBlock(__instance.CodeWithPath("crop-" + inSlot.Itemstack.Collectible.LastCodePart() + "-1"));
-                    if (block != null && block.CropProps != null)
-                    {
-                        dsc.AppendLine();
-                        dsc.Append("(" + "<font color=\"" 
-                            + cancrops.config.gene_color_int["resistance-cold"]
-                            + "\">"
-                            + (block.CropProps.ColdDamageBelow - resistanceTree.GetInt("D") * cancrops.config.coldResistanceByStat) 
-                            
-                            + "</font>");
-                        dsc.Append(", ");
-                        dsc.Append("<font color=\""
-                            + cancrops.config.gene_color_int["resistance-heat"]
-                            + "\">"
-                            + (block.CropProps.HeatDamageAbove + resistanceTree.GetInt("D") * cancrops.config.heatResistanceByStat)
+            if (!inSlot.Itemstack.Attributes.HasAttribute("genome")) return;
 
-                            + "</font>" + ")");
-                    }
+            // Use the Genome facade so old-format NBT migrates and species pair (with recessive
+            // allele) is visible. ResolvePlantFromSeedStack inside provides the fallback species
+            // when reading legacy items.
+            Genome genome = CommonUtils.GetSeedGenomeFromAttribute(inSlot.Itemstack);
+            if (genome == null) return;
+
+            // Stats line(s)
+            foreach (var kv in Genome.genes)
+            {
+                if (kv.Value) continue; // hidden
+                var snap = genome.GetGeneByName(kv.Key);
+                if (snap == null) continue;
+                cancrops.config.gene_color_int.TryGetValue(kv.Key, out string color);
+                dsc.Append("<font color=\"" + (color ?? "white") + "\">" + Lang.Get("cancrops:" + kv.Key + "-stat") + "</font>");
+                dsc.AppendFormat(": {0} ", snap.Dominant.Value);
+            }
+
+            // Species inheritance: show "Wheat (carrying rye)" when heterozygous.
+            AppendSpeciesLine(genome, dsc);
+
+            // Cold/heat resistance bracket from resistance stat.
+            var resistance = genome.Resistance;
+            if (resistance != null)
+            {
+                Block block = world.GetBlock(__instance.CodeWithPath("crop-" + inSlot.Itemstack.Collectible.LastCodePart() + "-1"));
+                if (block != null && block.CropProps != null)
+                {
+                    cancrops.config.gene_color_int.TryGetValue("resistance-cold", out string coldColor);
+                    cancrops.config.gene_color_int.TryGetValue("resistance-heat", out string heatColor);
+                    dsc.AppendLine();
+                    dsc.Append("(<font color=\"" + (coldColor ?? "white") + "\">"
+                        + (block.CropProps.ColdDamageBelow - resistance.Dominant.Value * cancrops.config.coldResistanceByStat)
+                        + "</font>, <font color=\"" + (heatColor ?? "white") + "\">"
+                        + (block.CropProps.HeatDamageAbove + resistance.Dominant.Value * cancrops.config.heatResistanceByStat)
+                        + "</font>)");
                 }
             }
-            
+        }
+
+        // Reads the species pair via the GeneRegistry and appends a line to the tooltip.
+        // Format: "Species: Wheat" for homozygous, "Species: Wheat (carrying rye)" for heterozygous.
+        private static void AppendSpeciesLine(Genome genome, StringBuilder dsc)
+        {
+            var speciesGene = GeneRegistry.Get<AgriPlant>(SpeciesGene.GENE_ID);
+            if (speciesGene == null) return;
+            var pair = genome.GetGenePair(speciesGene);
+            if (pair == null) return;
+            AgriPlant dom = pair.Dominant?.Trait;
+            AgriPlant rec = pair.Recessive?.Trait;
+            if (dom == null) return;
+
+            string domLabel = PlantDisplayLabel(dom);
+            cancrops.config.gene_color_int.TryGetValue("species", out string color);
+            string label = Lang.Get("cancrops:species-stat");
+            dsc.AppendLine();
+            dsc.Append("<font color=\"" + (color ?? "white") + "\">" + label + "</font>: " + domLabel);
+            if (rec != null && !PlantsEqual(dom, rec))
+            {
+                dsc.Append(" <font color=\"#888888\">(carrying " + PlantDisplayLabel(rec) + ")</font>");
+            }
+        }
+
+        private static string PlantDisplayLabel(AgriPlant plant)
+        {
+            if (plant == null) return "?";
+            string key = "cancrops:plant-" + plant.Id;
+            string localised = Lang.Get(key);
+            // Lang.Get returns the key itself when no translation exists — fall back to the id.
+            return localised == key ? plant.Id : localised;
+        }
+
+        private static bool PlantsEqual(AgriPlant a, AgriPlant b)
+        {
+            return a?.Domain == b?.Domain && a?.Id == b?.Id;
         }
         public static IEnumerable<CodeInstruction> Transpiler_BlockEntityFarmland_Update(IEnumerable<CodeInstruction> instructions)
         {

@@ -21,10 +21,26 @@ namespace cancrops.src
         public int minFertility = 0;
         public int maxFertility = 10;
         public bool hiddenFertility = true;
-        public int minMutativity = 0;
-        public int maxMutativity = 10;
-        public bool hiddenMutativity = true;
         public bool cloneMutations = true;
+
+        // int stat mutator (AgriCraft-style, replaces Mutativity-driven mutation in Phase 3+)
+        // Active strategy: "default" / "none" / "hill_climb" / "gaussian" / "reset_on_low"
+        public string activeStatMutator = "default";
+        public double statMutationChance = 0.25;
+        public int statMutationStep = 1;
+        // hill_climb: probability that the mutation goes up (rest goes down). 0.5 = symmetric, 1.0 = always up.
+        public double statMutationUpBias = 0.7;
+        // gaussian: standard deviation of the normal distribution applied to the value.
+        public double statMutationSigma = 1.0;
+        // reset_on_low: when value == 0, chance to randomise upward to [1, max].
+        public double statResetOnZeroChance = 0.10;
+
+        // How a int-stat gene's pair expresses a trait from its (dominant, recessive) values: MIN/MEAN/MAX
+        public string statTraitLogic = "MAX";
+
+        // Per-tick chance that a cross-sticks block with 2+ valid parents will attempt a combine.
+        // Effective rate is also throttled by the cross-sticks tick interval (~20s).
+        public double crossBreedTickChance = 0.5;
 
         public float coldResistanceByStat = 0.4f;
         public float heatResistanceByStat = 0.4f;
@@ -41,8 +57,7 @@ namespace cancrops.src
             { "resistance-cold",  "SlateBlue" },
             { "resistance-heat",  "LightSalmon" },
             { "fertility", "SeaGreen"},
-            { "mutativity", "Cyan"}
-
+            { "species", "MediumOrchid"},
         };
         public Dictionary<string, string> gene_color_int = new Dictionary<string, string>();
         public int weedMinimumSpreadStage = 1;
@@ -63,8 +78,7 @@ namespace cancrops.src
             {"growth", false},
             {"strength", false},
             {"resistance", false},
-            {"fertility", true},
-            {"mutativity", true}
+            {"fertility", true}
         };
         public string seedMergeStrategy = "tolower";
         public HashSet<string> seedMergeStrategies = ["tolower", "mean"];
