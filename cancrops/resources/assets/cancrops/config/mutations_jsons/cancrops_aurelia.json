@@ -1,0 +1,20 @@
+[
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.03,
+        "child": "cancrops:aurelia",
+        "parent1": "game:flax",
+        "parent2": "game:sunflower",
+        "conditions": []
+    },
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.75,
+        "child": "cancrops:aurelia",
+        "parent1": "cancrops:aurelia",
+        "parent2": "cancrops:aurelia",
+        "conditions": []
+    }
+]

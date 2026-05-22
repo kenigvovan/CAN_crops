@@ -74,6 +74,10 @@ namespace cancrops.src
                     }
 
                     it.StackSize = Math.Min(2, (int)(beCrop.agriPlant.SeedDropChance + beCrop.agriPlant.SeedDropBonus * stage));
+                    if (it.StackSize < 1)
+                    {
+                        it.StackSize = 1;
+                    }
                     continue;
                 }
                 it.StackSize += (int)((gain * CANBECrop.rand.Next(1, 3) * 0.2) * it.StackSize);

@@ -36,35 +36,30 @@ namespace cancrops.src.utility
                 return true;
             }
 
-            //find how to check for block of kind in area
+            // Stage gating: until the plant reaches RequirementFromStage the block-conditions
+            // are inactive (the plant sprouts wherever, then needs its terrain block to mature).
+            if (requirements.RequirementFromStage > 0)
+            {
+                int currentStage = beCrop.GetCropStageWithout();
+                if (currentStage < requirements.RequirementFromStage) return true;
+            }
+
+            // Each condition supplies a set of acceptable block ids (single block for exact
+            // codes, many for wildcards). Any block in that set counts toward Amount —
+            // e.g. a wildcard "game:ore-iron-*" treats all rock variants as the same ore.
             bool conditionSatisfied = false;
-            Dictionary<int, int> neccessaryBlocksCounters = new Dictionary<int, int>();
             foreach (var condition in requirements.Conditions)
             {
-                cancrops.sapi.World.BlockAccessor.SearchBlocks(beCrop.Pos.AddCopy(condition.MinPos.X, condition.MinPos.Y + 1, condition.MinPos.Z), beCrop.Pos.AddCopy(condition.MaxPos.X, condition.MaxPos.Y, condition.MaxPos.Z), delegate (Block block, BlockPos pos)
+                int found = 0;
+                cancrops.sapi.World.BlockAccessor.SearchBlocks(
+                    beCrop.Pos.AddCopy(condition.MinPos.X, condition.MinPos.Y, condition.MinPos.Z),
+                    beCrop.Pos.AddCopy(condition.MaxPos.X, condition.MaxPos.Y, condition.MaxPos.Z),
+                    delegate (Block block, BlockPos pos)
                 {
-                    if (block.Id == condition.NecessaryBlock.Id)
+                    if (condition.BlockIds != null && condition.BlockIds.Contains(block.Id))
                     {
-                        if(condition.Amount > 1)
-                        {
-                            if(neccessaryBlocksCounters.TryGetValue(condition.NecessaryBlock.Id, out int alreadyFoundAmount))
-                            {
-                                if(alreadyFoundAmount + 1 >= condition.Amount)
-                                {
-                                    conditionSatisfied = true;
-                                    return false;
-                                }
-                                else
-                                {
-                                    neccessaryBlocksCounters[condition.NecessaryBlock.Id] += 1;
-                                }
-                            }
-                            else
-                            {
-                                neccessaryBlocksCounters[condition.NecessaryBlock.Id] = 1;
-                            }
-                        }
-                        else
+                        found++;
+                        if (found >= condition.Amount)
                         {
                             conditionSatisfied = true;
                             return false;
@@ -72,10 +67,7 @@ namespace cancrops.src.utility
                     }
                     return true;
                 });
-                if(conditionSatisfied)
-                {
-                    break;
-                }
+                if (conditionSatisfied) break;
             }
             if (!conditionSatisfied)
             {

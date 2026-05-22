@@ -6,7 +6,7 @@
 	"variantgroups": [
 		{
 			"code": "type",
-			"states": [ "fieldmushroom", "almondmushroom", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap" ]
+			"states": [ "fieldmushroom", "almondmushroom", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap", "sulfurwheat", "ferru", "aurelia", "resincassava" ]
 		}
 	],
 	"shape": { "base": "game:item/resource/seeds/seedbag" },

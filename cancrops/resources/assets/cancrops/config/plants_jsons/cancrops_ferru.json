@@ -1,0 +1,52 @@
+{
+    "enabled": true,
+    "domain": "cancrops",
+    "id": "ferru",
+    "growthmultiplier": 0.8,
+    "cloneable": true,
+    "AllowCloning": true,
+    "spreadchance": 0.15,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 7,
+    "ClipRollbackStage": 2,
+    "Requirement": {
+        "LightLevelType": 2,
+        "MinLight": 6,
+        "MaxLight": 22,
+        "LightToleranceFactor": 0.5,
+        "RequirementFromStage": 9,
+        "Conditions": [
+            {
+                "Amount": 1,
+                "MinX": 0, "MinY": -2, "MinZ": 0,
+                "MaxX": 0, "MaxY": -2, "MaxZ": 0,
+                "BlockName": "game:ore-*-magnetite-*"
+            },
+            {
+                "Amount": 1,
+                "MinX": 0, "MinY": -2, "MinZ": 0,
+                "MaxX": 0, "MaxY": -2, "MaxZ": 0,
+                "BlockName": "game:ore-*-limonite-*"
+            },
+            {
+                "Amount": 1,
+                "MinX": 0, "MinY": -2, "MinZ": 0,
+                "MaxX": 0, "MaxY": -2, "MaxZ": 0,
+                "BlockName": "game:ore-*-hematite-*"
+            }
+        ]
+    },
+    "Clip_products": {
+        "Products": [
+            {
+                "CollectibleCode": "cancrops:seeds-ferru",
+                "ItemClass": 1,
+                "Avg": 0.5,
+                "Var": 0.3,
+                "LastDrop": false
+            }
+        ]
+    }
+}

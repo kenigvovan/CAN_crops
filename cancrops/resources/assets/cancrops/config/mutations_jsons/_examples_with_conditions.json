@@ -24,7 +24,7 @@
         ]
     },
     {
-        "description": "EXAMPLE: requires neighbouring blocks. The cross-sticks must have at least 2 oak logs within a 5x3x5 box around it. Demonstrates 'amount' and the relative box (minX..maxX, minY..maxY, minZ..maxZ) — coordinates are offsets from the cross-sticks position.",
+        "description": "EXAMPLE: requires neighbouring blocks. The cross-sticks must have at least 2 oak logs within a 5x3x5 box around it. Demonstrates 'amount' and the relative box (minX..maxX, minY..maxY, minZ..maxZ) — coordinates are offsets from the cross-sticks position. NOTE: 'block' supports wildcards (e.g. 'game:ore-iron-*' matches all rock variants, 'game:log-placed-*' matches any wood), and 'amount' then sums matches across the whole set.",
         "enabled": false,
         "mods": ["cancrops"],
         "chance": 0.08,

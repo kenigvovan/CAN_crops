@@ -1,11 +1,13 @@
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 
 namespace cancrops.src.genetics.conditions.types
 {
-    // Counts blocks of a given AssetLocation within a relative box around the cross-sticks position.
-    // Met if `amount` or more matching blocks are found.
+    // Counts blocks matching an AssetLocation within a relative box around the cross-sticks
+    // position. The pattern may include wildcards (e.g. "game:ore-iron-*") — any block whose
+    // code matches counts toward Amount. Met if `amount` or more matching blocks are found.
     public class NeighbourBlockCondition : IMutationCondition
     {
         public const string TYPE_ID = "neighbour_block";
@@ -15,6 +17,7 @@ namespace cancrops.src.genetics.conditions.types
         public BlockPos MinOffset { get; }
         public BlockPos MaxOffset { get; }
         public EnumConditionResult MetResult { get; }
+        private readonly bool isWildcard;
 
         public NeighbourBlockCondition(AssetLocation blockCode, int amount, BlockPos minOffset, BlockPos maxOffset, EnumConditionResult metResult)
         {
@@ -23,6 +26,7 @@ namespace cancrops.src.genetics.conditions.types
             MinOffset = minOffset;
             MaxOffset = maxOffset;
             MetResult = metResult;
+            isWildcard = blockCode != null && blockCode.ToShortString().Contains('*');
         }
 
         public EnumConditionResult Check(IWorldAccessor world, BlockPos pos)
@@ -32,7 +36,7 @@ namespace cancrops.src.genetics.conditions.types
             BlockPos max = pos.AddCopy(MaxOffset.X, MaxOffset.Y, MaxOffset.Z);
             world.BlockAccessor.SearchBlocks(min, max, (block, p) =>
             {
-                if (block?.Code != null && block.Code.Equals(BlockCode))
+                if (block?.Code != null && Matches(block.Code))
                 {
                     found++;
                     if (found >= Amount) return false;
@@ -41,6 +45,11 @@ namespace cancrops.src.genetics.conditions.types
             });
             bool met = found >= Amount;
             return met ? MetResult : EnumConditionResult.FORBID;
+        }
+
+        private bool Matches(AssetLocation code)
+        {
+            return isWildcard ? WildcardUtil.Match(BlockCode, code) : code.Equals(BlockCode);
         }
 
         public static IMutationCondition FromJson(JObject json)

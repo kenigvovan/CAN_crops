@@ -1,0 +1,20 @@
+[
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.05,
+        "child": "cancrops:sulfurwheat",
+        "parent1": "game:spelt",
+        "parent2": "game:sunflower",
+        "conditions": []
+    },
+    {
+        "enabled": true,
+        "mods": ["cancrops"],
+        "chance": 0.75,
+        "child": "cancrops:sulfurwheat",
+        "parent1": "cancrops:sulfurwheat",
+        "parent2": "cancrops:sulfurwheat",
+        "conditions": []
+    }
+]

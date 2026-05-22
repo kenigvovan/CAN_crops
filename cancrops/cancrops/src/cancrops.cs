@@ -363,6 +363,13 @@ namespace cancrops.src
         {
             base.Dispose();
             harmonyInstance.UnpatchAll(harmonyID);
+            // Force re-init on next world load: AgriPlant/AgriMutation hold Block and Item
+            // references resolved at InitPlants time. Between worlds those references can
+            // point to stale Block instances (different mod sets, different ids), so we
+            // drop them here and let InitSharedRegistries rebuild from scratch.
+            agriPlants = null;
+            agriMutations = null;
+            agriMutationHandler = null;
         }
     }
 }
