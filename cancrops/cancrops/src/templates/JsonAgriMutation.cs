@@ -1,4 +1,7 @@
-﻿namespace cancrops.src.templates
+﻿using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+
+namespace cancrops.src.templates
 {
     public class JsonAgriMutation
     {
@@ -7,7 +10,7 @@
         public string Child { get; set; }
         public string Parent1 { get; set; }
         public string Parent2 { get; set; }
-        //public List<AgriMutationCondition> Conditions { get; set; }
+        public List<JObject> Conditions { get; set; }
         public JsonAgriMutation()
         {
 

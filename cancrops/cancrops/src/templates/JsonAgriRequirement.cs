@@ -8,6 +8,7 @@ namespace cancrops.src.templates
         public int MinLight { get; set; }
         public int MaxLight { get; set; }
         public double LightToleranceFactor { get; set; }
+        public int RequirementFromStage { get; set; }
         public List<JsonAgriBlockCondition> Conditions { get; set; }
     }
 }

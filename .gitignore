@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Local HTML notes (mod page drafts, etc.)
+*.html
+/cancrops/cancrops/.claude/settings.local.json

@@ -6,7 +6,12 @@ using cancrops.src.blocks;
 using cancrops.src.commands;
 using cancrops.src.cropBehaviors;
 using cancrops.src.genetics;
+using cancrops.src.genetics.abstractions;
+using cancrops.src.genetics.conditions;
+using cancrops.src.genetics.conditions.types;
+using cancrops.src.genetics.genes;
 using cancrops.src.implementations;
+using ClimateRangeCondition = global::cancrops.src.genetics.conditions.types.ClimateCondition;
 using cancrops.src.items;
 using cancrops.src.templates;
 using cancrops.src.utility;
@@ -59,7 +64,6 @@ namespace cancrops.src
             //Patches
             harmonyInstance = new Harmony(harmonyID);
 
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("GetPlacedBlockInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetPlacedBlockInfo_New")));
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("GetDrops"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_BlockEntityFarmland_GetDrops")));
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("GetHoursForNextStage"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_BlockEntityFarmland_GetHoursForNextStage")));
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockCrop).GetMethod("OnBlockInteractStart"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_BlockCrop_OnBlockInteractStart_New")));
@@ -138,15 +142,13 @@ namespace cancrops.src
                     .HandleWith(SetStatsCommands.SetSeedStatCommand)
                  .EndSub();
 
-            harmonyInstance = new Harmony(harmonyID);
-            agriPlants = new AgriPlants();
-            agriMutations = new AgriMutations();
-            agriMutationHandler = new AgriMutationHandler();
+            InitSharedRegistries(api);
 
-            PopulateRegistries(api);
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Cold")));
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Heat")));
-            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update")));
+            harmonyInstance = new Harmony(harmonyID);
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Cold")));
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Heat")));
+           // harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update")));
+            harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFastForwardGrowth).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFastForwardGrowth_Update_Light")));
             serverChannel = sapi.Network.RegisterChannel("cancrops");
             serverChannel.RegisterMessageType(typeof(ConfigUpdateValuesPacket));
             api.Event.PlayerJoin += SendUpdatedConfigValues;
@@ -162,22 +164,35 @@ namespace cancrops.src
                        hiddenGrowth = cancrops.config.hiddenGrowth,
                        hiddenStrength = cancrops.config.hiddenStrength,
                        hiddenResistance = cancrops.config.hiddenResistance,
-                       hiddenFertility = cancrops.config.hiddenFertility,
-                       hiddenMutativity = cancrops.config.hiddenMutativity
+                       hiddenFertility = cancrops.config.hiddenFertility
                    }
                    , player);
         }
-        public void PopulateRegistries(ICoreServerAPI api)
-        {           
+        private void InitSharedRegistries(ICoreAPI api)
+        {
+            if (agriPlants != null) return; // already initialised for this side
+
+            agriPlants = new AgriPlants();
+            agriMutations = new AgriMutations();
+            agriMutationHandler = new AgriMutationHandler();
+
+            PopulateRegistries(api);
+            agriMutations.BuildComplexityMap();
+            RegisterGenes();
+            RegisterMutationConditions();
+        }
+
+        public void PopulateRegistries(ICoreAPI api)
+        {
             InitPlants(api);
             InitMutations(api);
         }
 
 
-        public void InitPlants(ICoreServerAPI api)
+        public void InitPlants(ICoreAPI api)
         {
             api.Logger.VerboseDebug("[cancrops] InitPlants");
-            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/plants_jsons");
+            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Logger, "config/plants_jsons");
             
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
             {
@@ -211,10 +226,10 @@ namespace cancrops.src
                 }
             }
         }
-        public void InitMutations(ICoreServerAPI api)
+        public void InitMutations(ICoreAPI api)
         {
             api.Logger.VerboseDebug("[cancrops] InitMutations");
-            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/mutations_jsons");
+            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Logger, "config/mutations_jsons");
 
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
             {
@@ -251,6 +266,8 @@ namespace cancrops.src
         {
             base.StartClientSide(api);
             //loadConfig(api);
+            InitSharedRegistries(api);
+
             harmonyInstance = new Harmony(harmonyID);
 
             //SEEDS
@@ -266,14 +283,15 @@ namespace cancrops.src
                 cancrops.config.hiddenStrength = packet.hiddenStrength;
                 cancrops.config.hiddenResistance = packet.hiddenResistance;
                 cancrops.config.hiddenFertility = packet.hiddenFertility;
-                cancrops.config.hiddenMutativity = packet.hiddenMutativity;
-                cancrops.config.hidden_genes["gain"] = cancrops.config.hiddenGain;              
-                cancrops.config.hidden_genes["growth"] = cancrops.config.hiddenGrowth;             
-                cancrops.config.hidden_genes["strength"] = cancrops.config.hiddenStrength;                
-                cancrops.config.hidden_genes["resistance"] = cancrops.config.hiddenResistance;               
-                cancrops.config.hidden_genes["fertility"] = cancrops.config.hiddenFertility;               
-                cancrops.config.hidden_genes["mutativity"] = cancrops.config.hiddenMutativity;
-                
+                cancrops.config.hidden_genes["gain"] = cancrops.config.hiddenGain;
+                cancrops.config.hidden_genes["growth"] = cancrops.config.hiddenGrowth;
+                cancrops.config.hidden_genes["strength"] = cancrops.config.hiddenStrength;
+                cancrops.config.hidden_genes["resistance"] = cancrops.config.hiddenResistance;
+                cancrops.config.hidden_genes["fertility"] = cancrops.config.hiddenFertility;
+                // Rebuild gene registry so IntStatGene.IsHidden reflects the freshly-received
+                // server config; tooltip iterates Genome.genes which caches IsHidden per gene.
+                RegisterGenes();
+                Genome.InvalidateGenesCache();
             });
         }
         public void InitColors()
@@ -286,6 +304,26 @@ namespace cancrops.src
                     config.gene_color_int[it.Key] = ColorUtil.Int2Hex(tmpInt);
                 }
             }
+        }
+        private void RegisterGenes()
+        {
+            GeneRegistry.Clear();
+            var intMutator = IntStatMutatorFactory.Create(config.activeStatMutator);
+            GeneRegistry.Register(new IntStatGene("gain", config.minGain, config.maxGain, config.hiddenGain, intMutator));
+            GeneRegistry.Register(new IntStatGene("growth", config.minGrowth, config.maxGrowth, config.hiddenGrowth, intMutator));
+            GeneRegistry.Register(new IntStatGene("strength", config.minStrength, config.maxStrength, config.hiddenStrength, intMutator));
+            GeneRegistry.Register(new IntStatGene("resistance", config.minResistance, config.maxResistance, config.hiddenResistance, intMutator));
+            GeneRegistry.Register(new IntStatGene("fertility", config.minFertility, config.maxFertility, config.hiddenFertility, intMutator));
+            GeneRegistry.Register(new SpeciesGene(agriPlants, agriPlants.getAll(), new SpeciesMutator()));
+        }
+        private void RegisterMutationConditions()
+        {
+            ConditionRegistry.Clear();
+            ConditionRegistry.Register(LightCondition.TYPE_ID, LightCondition.FromJson);
+            ConditionRegistry.Register(ClimateRangeCondition.TYPE_ID, ClimateRangeCondition.FromJson);
+            ConditionRegistry.Register(NeighbourBlockCondition.TYPE_ID, NeighbourBlockCondition.FromJson);
+            ConditionRegistry.Register(BiomeCondition.TYPE_ID, BiomeCondition.FromJson);
+            BiomeProviderRegistry.Set(new LandformBiomeProvider());
         }
         public static AgriPlants GetPlants()
         {
@@ -325,6 +363,13 @@ namespace cancrops.src
         {
             base.Dispose();
             harmonyInstance.UnpatchAll(harmonyID);
+            // Force re-init on next world load: AgriPlant/AgriMutation hold Block and Item
+            // references resolved at InitPlants time. Between worlds those references can
+            // point to stale Block instances (different mod sets, different ids), so we
+            // drop them here and let InitSharedRegistries rebuild from scratch.
+            agriPlants = null;
+            agriMutations = null;
+            agriMutationHandler = null;
         }
     }
 }

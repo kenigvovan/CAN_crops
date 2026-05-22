@@ -25,7 +25,5 @@ namespace cancrops.src.utility
         public bool hiddenResistance;
         [ProtoMember(7)]
         public bool hiddenFertility;
-        [ProtoMember(8)]
-        public bool hiddenMutativity;
     }
 }

@@ -8,7 +8,7 @@ namespace cancrops.src.genetics
 {
     // Represents a single genetic trait with dominant and recessive alleles.
     // In Mendelian genetics, the dominant allele determines the expressed trait (phenotype).
-    // Each gene corresponds to a crop statistic (gain, growth, strength, resistance, fertility, mutativity).
+    // Each gene corresponds to a crop statistic (gain, growth, strength, resistance, fertility).
     public class Gene
     {
         // The dominant allele - this value is used for the expressed trait

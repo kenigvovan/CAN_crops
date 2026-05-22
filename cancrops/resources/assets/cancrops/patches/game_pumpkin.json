@@ -1,21 +1,17 @@
 [
     {
-        "file": "game:blocktypes/plant/crop/pumpkin.json",
+        "file": "game:blocktypes/plant/pumpkin/motherplant.json",
         "op": "add",
         "path": "/entityClass",
         "value": "CANBECrop"
     },
     {
-        "file": "game:blocktypes/plant/crop/pumpkin.json",
+        "file": "game:blocktypes/plant/pumpkin/motherplant.json",
         "op": "add",
-        "path": "/cropProps/behaviors",
-        "value": [
-            {
-                "name": "AgriPlantCropBehavior",
-                "properties": {
-
-                }
-            }
-        ]
+        "path": "/cropProps/behaviors/-",
+        "value": {
+            "name": "AgriPlantCropBehavior",
+            "properties": {}
+        }
     }
 ]

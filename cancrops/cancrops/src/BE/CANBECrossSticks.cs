@@ -8,6 +8,7 @@ using cancrops.src.items;
 using cancrops.src.utility;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -306,6 +307,7 @@ namespace cancrops.src.BE
                 }
             }
             this.totalHoursLastWeed = tree.GetDouble("totalHoursLastWeed", 0.0);
+            this.weedProtectionTicks = tree.GetInt("weedProtectionTicks", 0);
         }
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
@@ -317,6 +319,15 @@ namespace cancrops.src.BE
             }
             tree.SetString("type", this.type);
             tree.SetDouble("totalHoursLastWeed", this.totalHoursLastWeed);
+            tree.SetInt("weedProtectionTicks", this.weedProtectionTicks);
+        }
+        public override void GetBlockInfo(IPlayer forPlayer, System.Text.StringBuilder sb)
+        {
+            base.GetBlockInfo(forPlayer, sb);
+            if (this.weedProtectionTicks > 0)
+            {
+                sb.AppendLine(Lang.Get("cancrops:antiweed-ticks-left", this.weedProtectionTicks));
+            }
         }
     }
 }

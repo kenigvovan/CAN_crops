@@ -45,5 +45,10 @@ namespace cancrops.src.utility
             //TODO
             return null;
         }
+
+        public IEnumerable<AgriPlant> getAll()
+        {
+            return plants.Values;
+        }
     }
 }

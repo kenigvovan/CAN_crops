@@ -1,195 +1,163 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using cancrops.src.genetics.abstractions;
+using cancrops.src.genetics.genes;
+using cancrops.src.implementations;
 using Vintagestory.API.Datastructures;
 
 namespace cancrops.src.genetics
 {
-    // Represents a complete set of genetic information for a crop plant.
-    // Contains 6 genes that control different aspects of the crop's behavior:
-    // - Gain: Amount of drops when harvested
-    // - Growth: Speed of growth (reduces time between stages)
-    // - Strength: Affects perish time of harvested items
-    // - Resistance: Temperature tolerance and weed resistance
-    // - Fertility: Probability of being selected as a parent during breeding
-    // - Mutativity: Chance of genetic mutations during breeding
-    public class Genome: IEnumerable<Gene>
+    // Facade over MapGenome that preserves the existing legacy API:
+    //   - Gain/Growth/Strength/Resistance/Fertility named accessors return Gene snapshots
+    //   - Species exposes the dominant AgriPlant trait
+    //   - GetGeneByName / SetGene / iteration / AsTreeAttribute / FromTreeAttribute keep working
+    // Mutativity is intentionally removed — callers that referenced it will fail at compile time.
+    public class Genome : IEnumerable<Gene>, IGenome
     {
-        // Lazy initialization to avoid static initialization order issues
-        // This dictionary tracks which genes should be hidden in the UI
+        private MapGenome inner;
+
+        // Legacy: hidden flags by stat name. Built from GeneRegistry on first access.
         private static Dictionary<string, bool> _genes;
         public static Dictionary<string, bool> genes
         {
             get
             {
-                if (_genes == null)
+                if (_genes == null || _genes.Count == 0)
                 {
-                    _genes = new Dictionary<string, bool>
+                    _genes = new Dictionary<string, bool>();
+                    foreach (var g in GeneRegistry.AllGenes)
                     {
-                        {"gain", cancrops.config?.hiddenGain ?? false},
-                        {"growth", cancrops.config?.hiddenGrowth ?? false},
-                        {"strength", cancrops.config?.hiddenStrength ?? false},
-                        {"resistance", cancrops.config?.hiddenResistance ?? false},
-                        {"fertility", cancrops.config?.hiddenFertility ?? true},
-                        {"mutativity", cancrops.config?.hiddenMutativity ?? true}
-                    };
+                        if (g is IntStatGene)
+                        {
+                            _genes[g.Id] = g.IsHidden;
+                        }
+                    }
                 }
                 return _genes;
             }
-        }        
-        public Gene Gain { get; set; }
-        public Gene Growth { get; set; }
-        public Gene Strength { get; set; }
-        public Gene Resistance { get; set; }
-        public Gene Fertility { get; set; }
-        public Gene Mutativity { get; set; }
+        }
+
+        public static void InvalidateGenesCache() => _genes = null;
+
+        public Gene Gain       => GetGeneSnapshot("gain");
+        public Gene Growth     => GetGeneSnapshot("growth");
+        public Gene Strength   => GetGeneSnapshot("strength");
+        public Gene Resistance => GetGeneSnapshot("resistance");
+        public Gene Fertility  => GetGeneSnapshot("fertility");
+
+        // New: species accessor. Returns the dominant AgriPlant or null if unset.
+        public AgriPlant Species
+        {
+            get
+            {
+                var gene = GeneRegistry.Get<AgriPlant>(SpeciesGene.GENE_ID);
+                if (gene == null) return null;
+                var pair = inner.GetGenePair<AgriPlant>(gene);
+                return pair?.GetTrait();
+            }
+        }
+
+        internal MapGenome Inner => inner;
+
         public Genome()
         {
-            Gain = new Gene("gain", new Allele(cancrops.config.minGain), new Allele(cancrops.config.minGain));
-            Growth = new Gene("growth", new Allele(cancrops.config.minGrowth), new Allele(cancrops.config.minGrowth));
-            Strength = new Gene("strength", new Allele(cancrops.config.minStrength), new Allele(cancrops.config.minStrength));
-            Resistance = new Gene("resistance", new Allele(cancrops.config.minResistance), new Allele(cancrops.config.minResistance));
-            Fertility = new Gene("fertility", new Allele(cancrops.config.minFertility), new Allele(cancrops.config.minFertility));
-            Mutativity = new Gene("mutativity", new Allele(cancrops.config.minMutativity), new Allele(cancrops.config.minMutativity));
-        }
-        public Genome(Gene gain, Gene growth, Gene strength, Gene resistance, Gene fertility, Gene mutativity)
-        {
-            Gain = gain;
-            Growth = growth;
-            Strength = strength;
-            Resistance = resistance;
-            Fertility = fertility;
-            Mutativity = mutativity;
-        }
-        public Genome(List<Gene> genes)
-        {
-            Gain = genes[0];
-            Growth = genes[1];
-            Strength = genes[2];
-            Resistance = genes[3];
-            Fertility = genes[4];
-            Mutativity = genes[5];
-        }
-        public Genome Clone()
-        {
-            Genome newGenome = new Genome();
-            newGenome.Gain.Dominant.Value = this.Gain.Dominant.Value;
-            newGenome.Gain.Recessive.Value = this.Gain.Recessive.Value;
-
-            newGenome.Growth.Dominant.Value = this.Growth.Dominant.Value;
-            newGenome.Growth.Recessive.Value = this.Growth.Recessive.Value;
-
-            newGenome.Strength.Dominant.Value = this.Strength.Dominant.Value;
-            newGenome.Strength.Recessive.Value = this.Strength.Recessive.Value;
-
-            newGenome.Resistance.Dominant.Value = this.Resistance.Dominant.Value;
-            newGenome.Resistance.Recessive.Value = this.Resistance.Recessive.Value;
-
-            newGenome.Fertility.Dominant.Value = this.Fertility.Dominant.Value;
-            newGenome.Fertility.Recessive.Value = this.Fertility.Recessive.Value;
-
-            newGenome.Mutativity.Dominant.Value = this.Mutativity.Dominant.Value;
-            newGenome.Mutativity.Recessive.Value = this.Mutativity.Recessive.Value;
-            return newGenome;
-        }
-        public Gene Clone(Gene gene)
-        {
-            foreach(var g in this.AsEnumerable())
+            inner = new MapGenome();
+            // Populate registered int genes with default alleles. Species is left unset —
+            // callers (seed crafting, planting) inject it explicitly.
+            foreach (var g in GeneRegistry.AllGenes)
             {
-                if(g.StatName == gene.StatName)
+                if (g is IntStatGene)
                 {
-                    return g.Clone();
+                    inner.SetGenePair(g.GenerateDefaultPair(null));
                 }
             }
-            return null;
         }
-        public Gene GetGeneByName(string name)
+
+        public Genome(List<Gene> legacyGenes) : this()
         {
-            foreach(var it in this.AsEnumerable())
+            foreach (var g in legacyGenes)
             {
-                if(it.StatName.Equals(name))
-                {
-                    return it;
-                }
+                SetGene(g.StatName, g);
             }
-            return null;
         }
+
+        // Used by the migration path / cross-breed engine to take ownership of a built MapGenome.
+        internal Genome(MapGenome inner)
+        {
+            this.inner = inner ?? new MapGenome();
+        }
+
+        public Gene GetGeneByName(string name) => GetGeneSnapshot(name);
+
         public bool SetGene(string name, Gene value)
         {
-            if (name.Equals("gain"))
-            {
-                Gain = value;
-                return true;
-            }
-            else if (name.Equals("growth"))
-            {
-                Growth = value;
-                return true;
-            }
-            else if (name.Equals("strength"))
-            {
-                Strength = value;
-                return true;
-            }
-            else if (name.Equals("resistance"))
-            {
-                Resistance = value;
-                return true;
-            }
-            else if (name.Equals("fertility"))
-            {
-                Fertility = value;
-                return true;
-            }
-            else if (name.Equals("mutativity"))
-            {
-                Mutativity = value;
-                return true;
-            }
-            return false;
-        }
-        public ITreeAttribute AsTreeAttribute()
-        {
-            ITreeAttribute newTree = new TreeAttribute();
-            foreach(var gene in this.AsEnumerable())
-            {
-                ITreeAttribute geneTree = new TreeAttribute();
-                geneTree.SetString("name", gene.StatName);
-                geneTree.SetInt("D", gene.Dominant.Value);
-                geneTree.SetInt("R", gene.Recessive.Value);
-                //geneTree.SetBool("H", gene.Hidden);
-                newTree[gene.StatName] = geneTree;
-            }
-            return newTree;
-        }
-        public static Genome FromTreeAttribute(ITreeAttribute tree)
-        {
-            if(tree == null)
-            {
-                return null;
-            }
-            List<Gene> newGenes = new List<Gene>();
-            foreach(var geneName in genes.Keys)
-            {
-                ITreeAttribute geneTree = tree.GetTreeAttribute(geneName);
-                
-                newGenes.Add(new Gene(geneName, new Allele(geneTree.GetInt("D")), new Allele(geneTree.GetInt("R"))));
-            }
-            return new Genome(newGenes);
-        }
-        public IEnumerator<Gene> GetEnumerator()
-        {
-            yield return Gain;
-            yield return Growth;
-            yield return Strength;
-            yield return Resistance;
-            yield return Fertility;
-            yield return Mutativity;
+            var gene = GeneRegistry.Get<int>(name);
+            if (gene == null || value == null) return false;
+            var pair = gene.GeneratePair(
+                gene.GetAllele(value.Dominant?.Value ?? gene.GetAllele(0).Trait),
+                gene.GetAllele(value.Recessive?.Value ?? gene.GetAllele(0).Trait));
+            inner.SetGenePair(pair);
+            return true;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public void SetSpecies(AgriPlant plant)
         {
-            return GetEnumerator();
+            var gene = GeneRegistry.Get<AgriPlant>(SpeciesGene.GENE_ID) as SpeciesGene;
+            if (gene == null || plant == null) return;
+            var allele = gene.GetAllele(plant);
+            if (allele == null) return;
+            inner.SetGenePair(gene.GeneratePair(allele, allele));
+        }
+
+        public Genome Clone()
+        {
+            return new Genome((MapGenome)inner.Clone());
+        }
+
+        IGenome IGenome.Clone() => Clone();
+
+        public Gene Clone(Gene gene)
+        {
+            if (gene == null) return null;
+            return GetGeneSnapshot(gene.StatName);
+        }
+
+        public ITreeAttribute AsTreeAttribute() => inner.AsTreeAttribute();
+
+        // IGenome delegation
+        public IGenePair GetGenePair(IGene gene) => inner.GetGenePair(gene);
+        public IGenePair<T> GetGenePair<T>(IGene<T> gene) => inner.GetGenePair(gene);
+        public void SetGenePair(IGenePair pair) => inner.SetGenePair(pair);
+        public IEnumerable<IGenePair> AllPairs => inner.AllPairs;
+
+        public static Genome FromTreeAttribute(ITreeAttribute tree, AgriPlant fallbackPlant = null)
+        {
+            if (tree == null) return null;
+            var map = MapGenome.FromTreeAttribute(tree, fallbackPlant);
+            return map == null ? null : new Genome(map);
+        }
+
+        public IEnumerator<Gene> GetEnumerator()
+        {
+            foreach (var name in genes.Keys)
+            {
+                var snap = GetGeneSnapshot(name);
+                if (snap != null) yield return snap;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private Gene GetGeneSnapshot(string statName)
+        {
+            var gene = GeneRegistry.Get<int>(statName);
+            if (gene == null) return null;
+            var pair = inner.GetGenePair<int>(gene);
+            if (pair == null) return null;
+            return new Gene(statName, new Allele(pair.Dominant.Trait), new Allele(pair.Recessive.Trait))
+            {
+                Hidden = gene.IsHidden
+            };
         }
     }
 }

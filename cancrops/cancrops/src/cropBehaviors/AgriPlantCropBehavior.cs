@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using cancrops.src.BE;
@@ -61,7 +60,7 @@ namespace cancrops.src.cropBehaviors
                 {
                     return false;
                 }
-                bool res = AgriPlantRequirmentChecker.CheckAgriPlantRequirements(beCrop);
+                bool res = AgriPlantRequirementChecker.CheckAgriPlantRequirements(beCrop);
                 if(!res)
                 {
                     handling = EnumHandling.PreventDefault;                   
