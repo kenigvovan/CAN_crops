@@ -71,6 +71,7 @@ namespace cancrops.src.genetics.genes
         {
             var dom = ReadAlleleFromTreeAttribute(tree.GetTreeAttribute("D"));
             var rec = ReadAlleleFromTreeAttribute(tree.GetTreeAttribute("R"));
+            if (dom == null || rec == null) return null;
             return GeneratePair(dom, rec);
         }
 

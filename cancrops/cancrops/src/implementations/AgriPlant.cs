@@ -149,7 +149,7 @@ namespace cancrops.src.implementations
                 Block b = cancrops.api.World.GetBlock(loc);
                 if (b != null) ids.Add(b.Id);
             }
-            cancrops.api.Logger.Warning("[cancrops] ResolveBlockIds '{0}' -> {1} blocks", blockName, ids.Count);
+            cancrops.api.Logger.VerboseDebug("[cancrops] ResolveBlockIds '{0}' -> {1} blocks", blockName, ids.Count);
             return ids;
         }
 
