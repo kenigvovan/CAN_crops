@@ -1,0 +1,145 @@
+[
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "potato",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 3
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "corn",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "blackbean",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "greenbean",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "kidneybean",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "pepper",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 6
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "tomato",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 6
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sisterblack",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sisterkidney",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sistergreen",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sisterblacksun",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sisterkidneysun",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  },
+  {
+    "enabled": true,
+    "domain": "newworldcrops",
+    "id": "sistergreensun",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.3,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 5
+  }
+]

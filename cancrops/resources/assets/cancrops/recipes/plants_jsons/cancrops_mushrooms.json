@@ -86,31 +86,6 @@
     {
         "enabled": true,
         "domain": "cancrops",
-        "id": "bolete",
-        "growthmultiplier": 1.0,
-        "AllowUnderGround": true,
-        "cloneable": true,
-        "AllowCloning": true,
-        "spreadchance": 0.25,
-        "seeddropchance": 1.0,
-        "seeddropbonus": 0.0,
-        "allowSourceStage": 3,
-        "lightSensitivity": 0.0,
-        "requirement": {
-            "LightLevelType": 2,
-            "MinLight": 0,
-            "MaxLight": 12,
-            "LightToleranceFactor": 0.4
-        },
-        "Clip_products": {
-            "Products": [
-                { "CollectibleCode": "cancrops:seeds-bolete", "ItemClass": 1, "Avg": 0.6, "Var": 0.3, "LastDrop": false }
-            ]
-        }
-    },
-    {
-        "enabled": true,
-        "domain": "cancrops",
         "id": "chanterelle",
         "growthmultiplier": 1.0,
         "AllowUnderGround": true,

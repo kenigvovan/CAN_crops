@@ -1,0 +1,50 @@
+[
+  {
+    "enabled": true,
+    "domain": "floralzoneseastasiaticregion",
+    "id": "luffaaegyptiaca",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 5,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "floralzoneseastasiaticregion:seeds-luffaaegyptiaca",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "floralzoneseastasiaticregion",
+    "id": "petasitesjaponicus",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 3,
+    "ClipRollbackStage": 1,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "floralzoneseastasiaticregion:seeds-petasitesjaponicus",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  }
+]

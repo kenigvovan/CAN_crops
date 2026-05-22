@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/koeni/source/repos/CAN_crops/cancrops/resources/assets/cancrops/config/**)",
+      "Read(//c/Users/koeni/source/repos/CAN_crops/cancrops/resources/assets/cancrops/recipes/**)"
+    ]
+  }
+}

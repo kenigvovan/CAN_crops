@@ -5,7 +5,7 @@
 	"variantgroups": [
 		{
 			"code": "mushroom",
-			"states": [ "fieldmushroom", "almondmushroom", "bolete", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap" ]
+			"states": [ "fieldmushroom", "almondmushroom", "chanterelle", "kingbolete", "commonmorel", "bitterbolete", "redwinecap", "paddystraw", "orangeoakbolete", "flyagaric", "puffball", "saffronmilkcap", "indigomilkcap" ]
 		},
 		{
 			"code": "stage",
@@ -71,13 +71,6 @@
 	},
 	"rainPermeable": false,
 	"dropsByType": {
-		"*-bolete-4": [
-			{
-				"type": "item",
-				"code": "cancrops:seeds-bolete",
-				"quantity": { "avg": 1 }
-			}
-		],
 		"*-4": [
 			{
 				"type": "item",

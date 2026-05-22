@@ -304,6 +304,18 @@ namespace cancrops.src
             // Species inheritance: show "Wheat (carrying rye)" when heterozygous.
             AppendSpeciesLine(genome, dsc);
 
+            // Effective light range: MinLight/MaxLight extended by LightToleranceFactor * strength.
+            var speciesGeneForLight = GeneRegistry.Get<AgriPlant>(SpeciesGene.GENE_ID);
+            var speciesPair = speciesGeneForLight != null ? genome.GetGenePair(speciesGeneForLight) : null;
+            AgriPlant plantForLight = speciesPair?.Dominant?.Trait;
+            if (plantForLight?.Requirement != null)
+            {
+                int strengthVal = genome.Strength?.Dominant?.Value ?? 0;
+                int bonus = (int)(plantForLight.Requirement.LightToleranceFactor * strengthVal);
+                dsc.AppendLine();
+                dsc.Append(Lang.Get("cancrops:light-range") + ": " + plantForLight.Requirement.MinLight + "–" + plantForLight.Requirement.MaxLight + " (±" + bonus + ")");
+            }
+
             // Cold/heat resistance bracket from resistance stat.
             var resistance = genome.Resistance;
             if (resistance != null)

@@ -10,9 +10,9 @@
     "strength-stat": "Strength",
     "fertility-stat": "Fertility",
     "species-stat": "Species",
+    "light-range": "Light",
     "block-crop-fieldmushroom-*": "Field mushroom",
     "block-crop-almondmushroom-*": "Almond mushroom",
-    "block-crop-bolete-*": "Bolete",
     "block-crop-chanterelle-*": "Chanterelle",
     "block-crop-kingbolete-*": "King bolete",
     "block-crop-commonmorel-*": "Common morel",
@@ -26,7 +26,6 @@
     "block-crop-indigomilkcap-*": "Indigo milk cap",
     "item-seeds-fieldmushroom": "Field mushroom mycelium",
     "item-seeds-almondmushroom": "Almond mushroom mycelium",
-    "item-seeds-bolete": "Bolete mycelium",
     "item-seeds-chanterelle": "Chanterelle mycelium",
     "item-seeds-kingbolete": "King bolete mycelium",
     "item-seeds-commonmorel": "Common morel mycelium",
@@ -40,7 +39,6 @@
     "item-seeds-indigomilkcap": "Indigo milk cap mycelium",
     "plant-fieldmushroom": "Field mushroom",
     "plant-almondmushroom": "Almond mushroom",
-    "plant-bolete": "Bolete",
     "plant-chanterelle": "Chanterelle",
     "plant-kingbolete": "King bolete",
     "plant-commonmorel": "Common morel",
@@ -72,5 +70,9 @@
     "item-handcultivator-iron": "Iron hand cultivator",
     "item-handcultivator-meteoriciron": "Meteoric iron hand cultivator",
     "item-handcultivator-steel": "Steel hand cultivator",
-    "item-canantiweed-temporal": "Anti-weed"
+    "item-canantiweed-temporal": "Anti-weed",
+    "cancrops:antiweed-ticks-left": "Anti-weed: {0} ticks left",
+
+    "cancrops:handbook-guide-title": "CANCrops: Genetics and Breeding",
+    "cancrops:handbook-guide-text": "CANCrops adds a genome to every crop. Seeds carry stats, a species pair and resistance, all of which you can improve through selective breeding.\n\n<strong>Genome</strong>\nFive numeric stats — <font color=\"#aaffaa\">Gain</font>, <font color=\"#aaffaa\">Growth</font>, <font color=\"#aaffaa\">Strength</font>, <font color=\"#aaffaa\">Resistance</font>, <font color=\"#aaffaa\">Fertility</font> — plus a Species pair. Every gene has a dominant and a recessive allele; only the dominant value affects the plant, but the recessive one is passed on.\n\n<strong>Seed tooltip</strong>\nHover a seed to see its stats, species (with carried recessive in brackets), the effective light range (MinLight–MaxLight ±tolerance × Strength), and the cold/heat damage thresholds adjusted by Resistance.\n\n<strong>Cross-breeding</strong>\nPlace Selection Sticks next to grown crops. Each tick the sticks check neighbouring mature plants and may spawn a mutated seed on themselves, based on configured cross-breeding rules (parent pair + chance + conditions). Place the result in farmland to grow the new species.\n\n<strong>Clipping</strong>\nUse shears on a mature crop to collect extra seeds without uprooting the plant. The clipped seed inherits the parent genome with small per-stat variance — useful for stabilising a sorted lineage.\n\n<strong>Cultivator</strong>\nThe hand cultivator removes weeds from infested crops or selection sticks.\n\n<strong>Mushrooms</strong>\nThirteen mushroom species can be discovered by crossing pairs of vanilla crops or basic mushrooms. They will only grow if <font color=\"#ffcc66\">bonysoil</font> is placed directly under the farmland block. They tolerate any light level within their range (MaxLight 9–14) — most accept full darkness."
 }

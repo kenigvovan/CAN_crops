@@ -1,0 +1,24 @@
+[
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.5,
+        "child": "game:flax",
+        "parent1": "game:spelt",
+        "parent2": "game:carrot",
+        "conditions": []
+    },
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.75,
+        "child": "game:flax",
+        "parent1": "game:flax",
+        "parent2": "game:flax",
+        "conditions": []
+    }
+]

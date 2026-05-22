@@ -1,0 +1,79 @@
+[
+    {
+        "description": "EXAMPLE: shade-loving hybrid that only crosses in dim light. The 'light' condition reads block light at the cross-sticks position; values below threshold FORBID the mutation, values inside [0,5] PASS.",
+        "enabled": false,
+        "mods": ["cancrops"],
+        "chance": 0.05,
+        "child": "cancrops:darkmushroom",
+        "parent1": "cancrops:fieldmushroom",
+        "parent2": "cancrops:almondmushroom",
+        "conditions": [
+            { "type": "light", "min": 0, "max": 5, "lightLevelType": 1, "result": "PASS" }
+        ]
+    },
+    {
+        "description": "EXAMPLE: cold-climate hybrid. Only crosses when temperature is in [-5, 8]°C and rainfall above 0.4. Outside the range → FORBID.",
+        "enabled": false,
+        "mods": ["cancrops"],
+        "chance": 0.1,
+        "child": "cancrops:frostwheat",
+        "parent1": "game:rye",
+        "parent2": "game:spelt",
+        "conditions": [
+            { "type": "climate", "minTemp": -5, "maxTemp": 8, "minRain": 0.4, "maxRain": 1.0, "result": "PASS" }
+        ]
+    },
+    {
+        "description": "EXAMPLE: requires neighbouring blocks. The cross-sticks must have at least 2 oak logs within a 5x3x5 box around it. Demonstrates 'amount' and the relative box (minX..maxX, minY..maxY, minZ..maxZ) — coordinates are offsets from the cross-sticks position.",
+        "enabled": false,
+        "mods": ["cancrops"],
+        "chance": 0.08,
+        "child": "cancrops:woodlandryie",
+        "parent1": "game:rye",
+        "parent2": "game:flax",
+        "conditions": [
+            {
+                "type": "neighbour_block",
+                "block": "game:log-placed-oak-ud",
+                "amount": 2,
+                "minX": -2, "maxX": 2,
+                "minY": -1, "maxY": 1,
+                "minZ": -2, "maxZ": 2,
+                "result": "PASS"
+            }
+        ]
+    },
+    {
+        "description": "EXAMPLE: biome restriction. Only crosses in 'tropic' or 'jungle' landforms. Biome names match VS landform code paths (see VSEssentials/assets/.../landforms.json).",
+        "enabled": false,
+        "mods": ["cancrops"],
+        "chance": 0.05,
+        "child": "cancrops:junglefruit",
+        "parent1": "game:pineapple",
+        "parent2": "game:cassava",
+        "conditions": [
+            { "type": "biome", "biomes": ["tropic", "jungle"], "result": "PASS" }
+        ]
+    },
+    {
+        "description": "EXAMPLE: combined conditions with a FORCE override. Multiple conditions are AND-ed: 'climate' must pass, AND being near a wood log forces the mutation (FORCE) ignoring the 0.05 chance. Any FORBID overrides any FORCE.",
+        "enabled": false,
+        "mods": ["cancrops"],
+        "chance": 0.05,
+        "child": "cancrops:perfecthybrid",
+        "parent1": "game:wheat",
+        "parent2": "game:rye",
+        "conditions": [
+            { "type": "climate", "minTemp": 10, "maxTemp": 25, "minRain": 0.3, "maxRain": 0.9, "result": "PASS" },
+            {
+                "type": "neighbour_block",
+                "block": "cancrops:strawhive",
+                "amount": 1,
+                "minX": -3, "maxX": 3,
+                "minY": -1, "maxY": 2,
+                "minZ": -3, "maxZ": 3,
+                "result": "FORCE"
+            }
+        ]
+    }
+]

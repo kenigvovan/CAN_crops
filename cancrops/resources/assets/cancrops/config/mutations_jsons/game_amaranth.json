@@ -1,0 +1,24 @@
+[
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.5,
+        "child": "game:amaranth",
+        "parent1": "game:spelt",
+        "parent2": "game:rice",
+        "conditions": []
+    },
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.75,
+        "child": "game:amaranth",
+        "parent1": "game:amaranth",
+        "parent2": "game:amaranth",
+        "conditions": []
+    }
+]

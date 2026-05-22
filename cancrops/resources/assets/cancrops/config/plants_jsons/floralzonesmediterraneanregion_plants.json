@@ -1,0 +1,50 @@
+[
+  {
+    "enabled": true,
+    "domain": "floralzonesmediterraneanregion",
+    "id": "armoraciarusticana",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 5,
+    "ClipRollbackStage": 2,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "floralzonesmediterraneanregion:seeds-armoraciarusticana",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  },
+  {
+    "enabled": true,
+    "domain": "floralzonesmediterraneanregion",
+    "id": "cynaracardunculusscolymus",
+    "growthmultiplier": 1.0,
+    "cloneable": true,
+    "spreadchance": 0.2,
+    "seeddropchance": 1.0,
+    "seeddropbonus": 0.0,
+    "allowSourceStage": 4,
+    "MinClipStage": 3,
+    "ClipRollbackStage": 1,
+    "Clip_products": {
+      "Products": [
+        {
+          "CollectibleCode": "floralzonesmediterraneanregion:seeds-cynaracardunculusscolymus",
+          "ItemClass": 1,
+          "Avg": 0.5,
+          "Var": 0.3,
+          "LastDrop": false
+        }
+      ]
+    }
+  }
+]

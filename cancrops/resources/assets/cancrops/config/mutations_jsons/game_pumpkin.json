@@ -1,0 +1,24 @@
+[
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.5,
+        "child": "game:pumpkin",
+        "parent1": "game:cabbage",
+        "parent2": "game:amaranth",
+        "conditions": []
+    },
+    {
+        "enabled": true,
+        "mods": [
+            "game"
+        ],
+        "chance": 0.75,
+        "child": "game:pumpkin",
+        "parent1": "game:pumpkin",
+        "parent2": "game:pumpkin",
+        "conditions": []
+    }
+]

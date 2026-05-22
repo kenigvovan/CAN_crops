@@ -142,15 +142,9 @@ namespace cancrops.src
                     .HandleWith(SetStatsCommands.SetSeedStatCommand)
                  .EndSub();
 
-            harmonyInstance = new Harmony(harmonyID);
-            agriPlants = new AgriPlants();
-            agriMutations = new AgriMutations();
-            agriMutationHandler = new AgriMutationHandler();
+            InitSharedRegistries(api);
 
-            PopulateRegistries(api);
-            agriMutations.BuildComplexityMap();
-            RegisterGenes();
-            RegisterMutationConditions();
+            harmonyInstance = new Harmony(harmonyID);
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Cold")));
             harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("updateCropDamage", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update_Heat")));
            // harmonyInstance.Patch(typeof(Vintagestory.GameContent.BlockEntityFarmland).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_BlockEntityFarmland_Update")));
@@ -174,17 +168,31 @@ namespace cancrops.src
                    }
                    , player);
         }
-        public void PopulateRegistries(ICoreServerAPI api)
-        {           
+        private void InitSharedRegistries(ICoreAPI api)
+        {
+            if (agriPlants != null) return; // already initialised for this side
+
+            agriPlants = new AgriPlants();
+            agriMutations = new AgriMutations();
+            agriMutationHandler = new AgriMutationHandler();
+
+            PopulateRegistries(api);
+            agriMutations.BuildComplexityMap();
+            RegisterGenes();
+            RegisterMutationConditions();
+        }
+
+        public void PopulateRegistries(ICoreAPI api)
+        {
             InitPlants(api);
             InitMutations(api);
         }
 
 
-        public void InitPlants(ICoreServerAPI api)
+        public void InitPlants(ICoreAPI api)
         {
             api.Logger.VerboseDebug("[cancrops] InitPlants");
-            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/plants_jsons");
+            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Logger, "config/plants_jsons");
             
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
             {
@@ -218,10 +226,10 @@ namespace cancrops.src
                 }
             }
         }
-        public void InitMutations(ICoreServerAPI api)
+        public void InitMutations(ICoreAPI api)
         {
             api.Logger.VerboseDebug("[cancrops] InitMutations");
-            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Server.Logger, "recipes/mutations_jsons");
+            Dictionary<AssetLocation, JToken> many = api.Assets.GetMany<JToken>(api.Logger, "config/mutations_jsons");
 
             foreach (KeyValuePair<AssetLocation, JToken> val in many)
             {
@@ -258,6 +266,8 @@ namespace cancrops.src
         {
             base.StartClientSide(api);
             //loadConfig(api);
+            InitSharedRegistries(api);
+
             harmonyInstance = new Harmony(harmonyID);
 
             //SEEDS
@@ -278,6 +288,10 @@ namespace cancrops.src
                 cancrops.config.hidden_genes["strength"] = cancrops.config.hiddenStrength;
                 cancrops.config.hidden_genes["resistance"] = cancrops.config.hiddenResistance;
                 cancrops.config.hidden_genes["fertility"] = cancrops.config.hiddenFertility;
+                // Rebuild gene registry so IntStatGene.IsHidden reflects the freshly-received
+                // server config; tooltip iterates Genome.genes which caches IsHidden per gene.
+                RegisterGenes();
+                Genome.InvalidateGenesCache();
             });
         }
         public void InitColors()

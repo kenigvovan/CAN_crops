@@ -16,11 +16,7 @@
 		"cancrops": ["*"]
 	},
 	"texturesByType": {
-		"*-fieldmushroom":  { "seed": { "base": "cancrops:items/resource/seeds/fieldmushroom" } },
-		"*-almondmushroom": { "seed": { "base": "cancrops:items/resource/seeds/almondmushroom" } },
-		"*-redwinecap":     { "seed": { "base": "cancrops:items/resource/seeds/redwinecap" } },
-		"*-flyagaric":      { "seed": { "base": "game:block/plant/mushroom/flyagariccap" } },
-		"*": { "seed": { "base": "game:block/plant/mushroom/{type}" } }
+		"*": { "seed": { "base": "cancrops:items/resource/seeds/{type}" } }
 	},
 	"materialDensity": 450,
 	"guiTransform": {

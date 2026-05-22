@@ -1,0 +1,82 @@
+[
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.10, "child": "cancrops:fieldmushroom",
+      "parent1": "game:flax", "parent2": "game:carrot", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:fieldmushroom",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:fieldmushroom", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.10, "child": "cancrops:almondmushroom",
+      "parent1": "game:peanut", "parent2": "game:rye", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:almondmushroom",
+      "parent1": "cancrops:almondmushroom", "parent2": "cancrops:almondmushroom", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.08, "child": "cancrops:chanterelle",
+      "parent1": "game:cabbage", "parent2": "game:turnip", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:chanterelle",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:chanterelle", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.07, "child": "cancrops:bitterbolete",
+      "parent1": "game:flax", "parent2": "game:rye", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:bitterbolete",
+      "parent1": "cancrops:bitterbolete", "parent2": "cancrops:bitterbolete", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.08, "child": "cancrops:redwinecap",
+      "parent1": "game:onion", "parent2": "cancrops:fieldmushroom", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:redwinecap",
+      "parent1": "cancrops:redwinecap", "parent2": "cancrops:redwinecap", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:commonmorel",
+      "parent1": "game:parsnip", "parent2": "game:rice", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:commonmorel",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:almondmushroom", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:commonmorel",
+      "parent1": "cancrops:commonmorel", "parent2": "cancrops:commonmorel", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.08, "child": "cancrops:paddystraw",
+      "parent1": "game:rice", "parent2": "game:soybean", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.10, "child": "cancrops:paddystraw",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:almondmushroom", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:paddystraw",
+      "parent1": "cancrops:paddystraw", "parent2": "cancrops:paddystraw", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:orangeoakbolete",
+      "parent1": "game:pumpkin", "parent2": "game:spelt", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:orangeoakbolete",
+      "parent1": "cancrops:redwinecap", "parent2": "cancrops:almondmushroom", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:orangeoakbolete",
+      "parent1": "cancrops:orangeoakbolete", "parent2": "cancrops:orangeoakbolete", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:flyagaric",
+      "parent1": "game:sunflower", "parent2": "game:amaranth", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:flyagaric",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:redwinecap", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:flyagaric",
+      "parent1": "cancrops:flyagaric", "parent2": "cancrops:flyagaric", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.07, "child": "cancrops:puffball",
+      "parent1": "game:cabbage", "parent2": "game:pineapple", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.08, "child": "cancrops:puffball",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:paddystraw", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:puffball",
+      "parent1": "cancrops:puffball", "parent2": "cancrops:puffball", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:saffronmilkcap",
+      "parent1": "game:cassava", "parent2": "game:carrot", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:saffronmilkcap",
+      "parent1": "cancrops:fieldmushroom", "parent2": "cancrops:redwinecap", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:saffronmilkcap",
+      "parent1": "cancrops:saffronmilkcap", "parent2": "cancrops:saffronmilkcap", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:kingbolete",
+      "parent1": "game:turnip", "parent2": "game:peanut", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.05, "child": "cancrops:kingbolete",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:bitterbolete", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:kingbolete",
+      "parent1": "cancrops:kingbolete", "parent2": "cancrops:kingbolete", "conditions": [] },
+
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:indigomilkcap",
+      "parent1": "game:amaranth", "parent2": "game:soybean", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.06, "child": "cancrops:indigomilkcap",
+      "parent1": "cancrops:chanterelle", "parent2": "cancrops:redwinecap", "conditions": [] },
+    { "enabled": true, "mods": ["cancrops"], "chance": 0.75, "child": "cancrops:indigomilkcap",
+      "parent1": "cancrops:indigomilkcap", "parent2": "cancrops:indigomilkcap", "conditions": [] }
+]

@@ -55,7 +55,7 @@ namespace cancrops.src.implementations
                 {
                     if (product.ItemClass == EnumItemClass.Item)
                     {
-                        Item itemTmp = cancrops.sapi.World.GetItem(new AssetLocation(product.CollectibleCode));
+                        Item itemTmp = cancrops.api.World.GetItem(new AssetLocation(product.CollectibleCode));
                         if (itemTmp == null)
                         {
                             continue;
@@ -74,7 +74,7 @@ namespace cancrops.src.implementations
                 {
                     if (product.ItemClass == EnumItemClass.Item)
                     {
-                        Item itemTmp = cancrops.sapi.World.GetItem(new AssetLocation(product.CollectibleCode));
+                        Item itemTmp = cancrops.api.World.GetItem(new AssetLocation(product.CollectibleCode));
                         if (itemTmp == null)
                         {
                             continue;
@@ -86,7 +86,7 @@ namespace cancrops.src.implementations
                     }
                     else
                     {
-                        Block itemTmp = cancrops.sapi.World.GetBlock(new AssetLocation(product.CollectibleCode));
+                        Block itemTmp = cancrops.api.World.GetBlock(new AssetLocation(product.CollectibleCode));
                         if (itemTmp == null)
                         {
                             continue;
@@ -110,7 +110,7 @@ namespace cancrops.src.implementations
                     this.Requirement.Conditions = new List<AgriBlockCondition>();
                     foreach (var it in jsonAgriPlant.Requirement.Conditions)
                     {
-                        Block tmpBlock = cancrops.sapi.World.GetBlock(new AssetLocation(it.BlockName));
+                        Block tmpBlock = cancrops.api.World.GetBlock(new AssetLocation(it.BlockName));
                         if (tmpBlock != null)
                         {
                             this.Requirement.Conditions.Add(new AgriBlockCondition(tmpBlock, it.Amount,
